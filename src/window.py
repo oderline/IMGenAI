@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'src/untitled.ui'
+# Form implementation generated from reading ui file 'src/window.ui'
 #
 # Created by: PyQt6 UI code generator 6.7.1
 #
@@ -13,9 +13,12 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.setWindowModality(QtCore.Qt.WindowModality.NonModal)
+        MainWindow.setEnabled(True)
         MainWindow.resize(1000, 762)
+        MainWindow.setAcceptDrops(False)
         MainWindow.setIconSize(QtCore.QSize(24, 24))
         self.centralwidget = QtWidgets.QWidget(parent=MainWindow)
+        self.centralwidget.setAcceptDrops(False)
         self.centralwidget.setObjectName("centralwidget")
         self.widget1 = QtWidgets.QWidget(parent=self.centralwidget)
         self.widget1.setGeometry(QtCore.QRect(10, 10, 250, 663))
@@ -138,6 +141,7 @@ class Ui_MainWindow(object):
         self.image = QtWidgets.QLabel(parent=self.centralwidget)
         self.image.setEnabled(True)
         self.image.setGeometry(QtCore.QRect(270, 10, 720, 720))
+        self.image.setAcceptDrops(False)
         self.image.setAutoFillBackground(False)
         self.image.setInputMethodHints(QtCore.Qt.InputMethodHint.ImhNone)
         self.image.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
@@ -177,8 +181,8 @@ class Ui_MainWindow(object):
         self.save_prompts.setCheckable(True)
         self.save_prompts.setChecked(True)
         self.save_prompts.setObjectName("save_prompts")
-        self.open_prompt = QtGui.QAction(parent=MainWindow)
-        self.open_prompt.setObjectName("open_prompt")
+        self.open_file = QtGui.QAction(parent=MainWindow)
+        self.open_file.setObjectName("open_file")
         self.save_prompt = QtGui.QAction(parent=MainWindow)
         self.save_prompt.setObjectName("save_prompt")
         self.actionWidget = QtGui.QAction(parent=MainWindow)
@@ -197,7 +201,9 @@ class Ui_MainWindow(object):
         self.NSFW_content.setCheckable(True)
         self.NSFW_content.setChecked(False)
         self.NSFW_content.setObjectName("NSFW_content")
-        self.menua.addAction(self.open_prompt)
+        self.open_image = QtGui.QAction(parent=MainWindow)
+        self.open_image.setObjectName("open_image")
+        self.menua.addAction(self.open_file)
         self.menua.addAction(self.save_prompt)
         self.menuSettings.addAction(self.toggle_sidebar)
         self.menuSettings.addSeparator()
@@ -235,13 +241,14 @@ class Ui_MainWindow(object):
         self.menuHelp.setTitle(_translate("MainWindow", "Help"))
         self.save_images.setText(_translate("MainWindow", "Save images"))
         self.save_prompts.setText(_translate("MainWindow", "Save prompts"))
-        self.open_prompt.setText(_translate("MainWindow", "Open prompt"))
+        self.open_file.setText(_translate("MainWindow", "Open file"))
         self.save_prompt.setText(_translate("MainWindow", "Save prompt"))
         self.actionWidget.setText(_translate("MainWindow", "Widget"))
         self.toggle_sidebar.setText(_translate("MainWindow", "Sidebar"))
         self.reset_prompt.setText(_translate("MainWindow", "Reset prompt"))
         self.configuration.setText(_translate("MainWindow", "Configuration"))
         self.NSFW_content.setText(_translate("MainWindow", "Allow NSFW content"))
+        self.open_image.setText(_translate("MainWindow", "Open image"))
 
 
 if __name__ == "__main__":

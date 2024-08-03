@@ -1,180 +1,241 @@
-from PyQt6.QtWidgets import QFileDialog, QApplication, QMainWindow
-from PyQt6.QtGui import QPixmap, QIcon
-from PyQt6 import QtCore
+from PyQt6 import QtCore, QtGui, QtWidgets
+
+# from PIL.PngImagePlugin import PngInfo
+from PIL import Image
 
 import threading, requests, base64, random, ujson, sys, os
+from time import sleep
 
 from window import Ui_MainWindow
+from config import Ui_Dialog
 
 
 # TODO: config file (config.ini), import configparser
 
-# For correct prompt saving
-last_used_seed = "-1"
 
+class IMGenAI():
+	def __init__(self) -> None:
+		# For correct prompt saving
+		self.last_used_seed: int = -1
 
-def openPrompt() -> None:
-	filename = QFileDialog().getOpenFileName(
-		caption="Open prompt file",
-		filter="Text files (*.txt)"
-	)
+	def run(self) -> None:
+		self.app = QtWidgets.QApplication(sys.argv)
+		self.MainWindow = QtWidgets.QMainWindow()
+		self.main_window = Ui_MainWindow()
+		self.main_window.setupUi(self.MainWindow)
+		self.main_window.statusbar.hide()
+		self.MainWindow.setFixedSize(self.MainWindow.size())
+		self.setupMainWindowUI()
+		self.MainWindow.show()
 
-	with open(filename[0], "r") as f:
-		data: dict = ujson.load(f)
-		f.close()
+		sys.exit(self.app.exec())
 
-	setValues(data)
-	global last_used_seed
-	last_used_seed = data["seed"]
+	def setupMainWindowUI(self) -> None:
+		# Set icons
+		self.main_window.open_file.setIcon(QtGui.QIcon().fromTheme("document-open"))
+		self.main_window.open_image.setIcon(QtGui.QIcon().fromTheme("document-open"))
+		self.main_window.save_prompt.setIcon(QtGui.QIcon().fromTheme("document-save"))
+		self.main_window.configuration.setIcon(QtGui.QIcon().fromTheme("document-properties"))
+		self.main_window.reset_prompt.setIcon(QtGui.QIcon().fromTheme("view-restore"))
 
-def savePrompt() -> None:
-	filename = QFileDialog().getSaveFileName(
-		caption="Save prompt file",
-		filter="Text files (*.txt)"
-	)
+		# Configure shorttcut keys
+		self.main_window.pushButton4.setShortcut(QtGui.QKeySequence("Ctrl+Return"))
 
-	with open(filename[0], "w") as f:
-		data: dict = getValues()
-		data["seed"] = last_used_seed
-		f.write(ujson.dumps(data, indent=4))
-		f.close()
+		# Configure "File" menu functions
+		self.main_window.open_file.triggered.connect(self.openFile)
+		# self.main_window.open_image.triggered.connect(self.openImage)
+		self.main_window.save_prompt.triggered.connect(self.savePrompt)
 
-def toggleSidebar() -> None:
-	if ui.toggle_sidebar.isChecked():
-		MainWindow.setFixedSize(1000, MainWindow.height())
-		ui.image.setGeometry(QtCore.QRect(270, 10, 720, 720))
-		ui.widget1.show()
-	else:
-		MainWindow.setFixedSize(740, MainWindow.height())
-		ui.image.setGeometry(QtCore.QRect(10, 10, 720, 720))
-		ui.widget1.hide()
+		# Configure "Settings" menu functions
+		self.main_window.toggle_sidebar.triggered.connect(self.toggleSidebar)
+		self.main_window.configuration.triggered.connect(self.configuWindow)
+		self.main_window.reset_prompt.triggered.connect(lambda: self.setValues({
+			"prompt": "",
+			"negative_prompt": "",
+			"seed": "-1",
+			"sampling_steps": 20,
+			"width": 512,
+			"height": 512,
+			"guidance_scale": 7
+		}))
 
-def getValues() -> dict:
-	return {
-		"prompt": ui.textEdit1.toPlainText(),
-		"negative_prompt": ui.textEdit2.toPlainText(),
-		"seed": ui.lineEdit1.text() if int(ui.lineEdit1.text()) != -1 else random.randint(0, 1000000000),
-		"sampling_steps": ui.spinBox1.value(),
-		"width": ui.spinBox2.value(),
-		"height": ui.spinBox3.value(),
-		"guidance_scale": ui.spinBox4.value(),
-		"NSFW_content": int(ui.NSFW_content.isChecked())
-	}
+		# Configure "Help" menu functions
+		# 
 
-def setValues(data: dict) -> None:
-	ui.textEdit1.setText(data["prompt"])
-	ui.textEdit2.setText(data["negative_prompt"])
-	ui.lineEdit1.setText(str(data["seed"]))
-	ui.spinBox1.setValue(data["sampling_steps"])
-	ui.spinBox2.setValue(data["width"])
-	ui.spinBox3.setValue(data["height"])
-	ui.spinBox4.setValue(data["guidance_scale"])
-	ui.NSFW_content.setChecked(data["NSFW_content"])
+		# Change SpinBox values
+		self.main_window.horizontalSlider1.valueChanged.connect(lambda: self.main_window.spinBox1.setValue(self.main_window.horizontalSlider1.value()))
+		self.main_window.horizontalSlider2.valueChanged.connect(lambda: self.main_window.spinBox2.setValue(self.main_window.horizontalSlider2.value()))
+		self.main_window.horizontalSlider3.valueChanged.connect(lambda: self.main_window.spinBox3.setValue(self.main_window.horizontalSlider3.value()))
+		self.main_window.horizontalSlider4.valueChanged.connect(lambda: self.main_window.spinBox4.setValue(self.main_window.horizontalSlider4.value()))
 
-def generate() -> None:
-	# Get url and prompt data
-	url: str = ui.lineEdit2.text()
-	data: dict = getValues()
+		# Change HorizontalSlider values
+		self.main_window.spinBox1.valueChanged.connect(lambda: self.main_window.horizontalSlider1.setValue(self.main_window.spinBox1.value()))
+		self.main_window.spinBox2.valueChanged.connect(lambda: self.main_window.horizontalSlider2.setValue(self.main_window.spinBox2.value()))
+		self.main_window.spinBox3.valueChanged.connect(lambda: self.main_window.horizontalSlider3.setValue(self.main_window.spinBox3.value()))
+		self.main_window.spinBox4.valueChanged.connect(lambda: self.main_window.horizontalSlider4.setValue(self.main_window.spinBox4.value()))
 
-	# Update last used seed
-	global last_used_seed
-	last_used_seed = data["seed"]
+		# Connect buttons
+		self.main_window.pushButton2.clicked.connect(lambda: self.main_window.lineEdit1.setText(str(random.randint(0, 9999_9999_9999_9999))))
+		self.main_window.pushButton3.clicked.connect(lambda: self.main_window.lineEdit1.setText("-1"))
+		self.main_window.pushButton4.clicked.connect(lambda: threading.Thread(target=self.generate).start())
 
-	# Get response
-	try:
-		MainWindow.statusBar().showMessage("Generating image...")
-		responce: requests.Response = requests.post(url, data)
-		img: bytes = base64.b64decode(responce.content)
-	except Exception as e:
-		MainWindow.statusBar().showMessage(e)
-		return
+	def configuWindow(self) -> None:
+		from PyQt6.QtWidgets import QDialog
+		self.ConfigWindow = QDialog()
+		self.config_window = Ui_Dialog()
+		self.config_window.setupUi(self.ConfigWindow)
+		self.setupConfigWindowUI()
+		self.ConfigWindow.show()
 
-	# Get date and time
-	date: str = QtCore.QDate.currentDate().toString("dd-MM-yyyy")
-	time: str = QtCore.QTime.currentTime().toString("hh-mm-ss")
+	def setupConfigWindowUI(self) -> None:
+		self.config_window.listView.setMovement(QtGui.QListView.Movement.Static)
+		self.config_window.listView.setModel(QtGui.QStandardItemModel())
 
-	# Save images
-	if ui.save_images.isChecked():
-		image_file: str = f"output/images/{date}/image_{time}.png"
-		os.makedirs(os.path.dirname(image_file), exist_ok=True)
-		with open(image_file, "wb") as f:
-			f.write(img)
-			f.close()
+		# List of configuration menu items
+		self.config_window.listView.model().appendRow(QtGui.QStandardItem("1"))
+		self.config_window.listView.model().appendRow(QtGui.QStandardItem("2"))
+		self.config_window.listView.model().appendRow(QtGui.QStandardItem("3"))
 
-	# Save prompts
-	if ui.save_prompts.isChecked():
-		prompt_file: str = f"output/prompts/{date}/image_{time}.txt"
-		os.makedirs(os.path.dirname(prompt_file), exist_ok=True)
-		with open(prompt_file, "w") as f:
-			f.write(ujson.dumps(data, indent=4))
-			f.close()
+	# 	self.config_window.listView.clicked.connect(self.changeConfigTab)
 
-	# Create pixmap
-	pixmap: QPixmap = QPixmap()
-	pixmap.loadFromData(img)
+	# def changeConfigTab(self):
+	# 	y = self.config_window.listView.selectedIndexes()
+	# 	z = self.config_window.listView.model().itemData(y[0])[0]
+	# 	print(z)
 
-	# Resize image
-	if pixmap.width() > ui.image.width() or pixmap.height() > ui.image.height():
-		pixmap = pixmap.scaled(720, 720, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation)
+	def openFile(self) -> None:
+		try:
+			filename = QtWidgets.QFileDialog().getOpenFileName(
+				caption="Open image/prompt file",
+				# filter="Image files (*.png);;Text files (*.txt)"
+				filter="Image/Text files (*.png *.txt)"
+			)
 
-	# Display image
-	ui.image.setPixmap(pixmap)
+			with open(filename[0], "r") as f:
+				data: dict = ujson.load(f)
+				f.close()
 
-	# Delete pixmap
-	del pixmap
+			self.setValues(data)
+			self.last_used_seed = int(data["seed"])
+		except:
+			...
+
+	def savePrompt(self) -> None:
+		try:
+			filename = QtWidgets.QFileDialog().getSaveFileName(
+				caption="Save prompt file",
+				filter="Text files (*.txt)"
+			)
+
+			with open(filename[0], "w") as f:
+				data: dict = self. getValues()
+				# data["seed"] = str(self.last_used_seed)
+				data["seed"] = self.last_used_seed
+				f.write(ujson.dumps(data, indent=4))
+				f.close()
+		except:
+			...
+
+	def toggleSidebar(self) -> None:
+		if self.main_window.toggle_sidebar.isChecked():
+			self.MainWindow.setFixedSize(1000, self.MainWindow.height())
+			self.main_window.image.setGeometry(QtCore.QRect(270, 10, 720, 720))
+			self.main_window.widget1.show()
+		else:
+			self.MainWindow.setFixedSize(740, self.MainWindow.height())
+			self.main_window.image.setGeometry(QtCore.QRect(10, 10, 720, 720))
+			self.main_window.widget1.hide()
+
+	def getValues(self) -> dict:
+		return {
+			"prompt": self.main_window.textEdit1.toPlainText(),
+			"negative_prompt": self.main_window.textEdit2.toPlainText(),
+			"seed": int(self.main_window.lineEdit1.text()) if int(self.main_window.lineEdit1.text()) != -1 else random.randint(0, 9999_9999_9999_9999),
+			"sampling_steps": self.main_window.spinBox1.value(),
+			"width": self.main_window.spinBox2.value(),
+			"height": self.main_window.spinBox3.value(),
+			"guidance_scale": self.main_window.spinBox4.value(),
+			"NSFW_content": int(self.main_window.NSFW_content.isChecked())
+		}
+
+	def setValues(self, data: dict) -> None:
+		self.main_window.textEdit1.setText(str(data["prompt"]))
+		self.main_window.textEdit2.setText(str(data["negative_prompt"]))
+		self.main_window.lineEdit1.setText(str(data["seed"]))
+		self.main_window.spinBox1.setValue(int(data["sampling_steps"]))
+		self.main_window.spinBox2.setValue(int(data["width"]))
+		self.main_window.spinBox3.setValue(int(data["height"]))
+		self.main_window.spinBox4.setValue(int(data["guidance_scale"]))
+
+		# For compatibility with old prompt files
+		try:
+			self.main_window.NSFW_content.setChecked(data["NSFW_content"])
+		except:
+			self.main_window.NSFW_content.setChecked(False)
+
+	def setStatusBarText(self, text: str, time: int = 5) -> None:
+		self.main_window.statusbar.show()
+		self.MainWindow.statusBar().showMessage(text)
+		sleep(time)
+		self.main_window.statusbar.hide() if time > 0 else ...
+
+	def generate(self) -> None:
+		# Get url and prompt data
+		url: str = self.main_window.lineEdit2.text()
+		data: dict = self.getValues()
+
+		# Update last used seed
+		global last_used_seed
+		last_used_seed = int(data["seed"])
+
+		# POST request and response
+		try:
+			threading.Thread(target=self.setStatusBarText, args=("Generating image...", 0)).start()
+			responce: requests.Response = requests.post(url, data)
+			img: bytes = base64.b64decode(responce.content)
+		except Exception as e:
+			threading.Thread(target=self.setStatusBarText, args=(f"{e}",)).start()
+			return
+
+		# Get date and time
+		date: str = QtCore.QDate.currentDate().toString("dd-MM-yyyy")
+		time: str = QtCore.QTime.currentTime().toString("hh-mm-ss")
+
+		# Save images
+		if self.main_window.save_images.isChecked():
+			image_file: str = f"output/images/{date}/image_{time}.png"
+			os.makedirs(os.path.dirname(image_file), exist_ok=True)
+			with open(image_file, "wb") as f:
+				f.write(img)
+				f.close()
+
+		# Save prompts
+		if self.main_window.save_prompts.isChecked():
+			prompt_file: str = f"output/prompts/{date}/image_{time}.txt"
+			os.makedirs(os.path.dirname(prompt_file), exist_ok=True)
+			with open(prompt_file, "w") as f:
+				f.write(ujson.dumps(data, indent=4))
+				f.close()
+
+		# Create pixmap
+		pixmap: QtGui.QPixmap = QtGui.QPixmap()
+		pixmap.loadFromData(img)
+
+		# Resize image
+		if pixmap.width() > self.main_window.image.width() or pixmap.height() > self.main_window.image.height():
+			pixmap = pixmap.scaled(720, 720, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation)
+
+		# Display image
+		self.main_window.image.setPixmap(pixmap)
+
+		# Delete pixmap
+		del pixmap
+
+		# Update status bar
+		self.main_window.statusbar.hide()
+		# threading.Thread(target=self.main_window.statusbar.hide(), args=()).start()
 
 
 if __name__ == "__main__":
-	app = QApplication(sys.argv)
-	MainWindow = QMainWindow()
-	ui = Ui_MainWindow()
-	ui.setupUi(MainWindow)
-	ui.statusbar.hide()
-	MainWindow.setFixedSize(MainWindow.size())
-	MainWindow.show()
-
-	# Set icons
-	ui.open_prompt.setIcon(QIcon().fromTheme("document-open"))
-	ui.save_prompt.setIcon(QIcon().fromTheme("document-save"))
-	ui.configuration.setIcon(QIcon().fromTheme("document-properties"))
-	ui.reset_prompt.setIcon(QIcon().fromTheme("view-restore"))
-
-	# Configure "File" menu functions
-	ui.open_prompt.triggered.connect(openPrompt)
-	ui.save_prompt.triggered.connect(savePrompt)
-
-	# Configure "Settings" menu functions
-	ui.toggle_sidebar.triggered.connect(toggleSidebar)
-	ui.reset_prompt.triggered.connect(lambda: setValues({
-		"prompt": "",
-		"negative_prompt": "",
-		"seed": "-1",
-		"sampling_steps": 20,
-		"width": 512,
-		"height": 512,
-		"guidance_scale": 7
-	}))
-
-	# Configure "Help" menu functions
-	# 
-
-	# Change SpinBox values
-	ui.horizontalSlider1.valueChanged.connect(lambda: ui.spinBox1.setValue(ui.horizontalSlider1.value()))
-	ui.horizontalSlider2.valueChanged.connect(lambda: ui.spinBox2.setValue(ui.horizontalSlider2.value()))
-	ui.horizontalSlider3.valueChanged.connect(lambda: ui.spinBox3.setValue(ui.horizontalSlider3.value()))
-	ui.horizontalSlider4.valueChanged.connect(lambda: ui.spinBox4.setValue(ui.horizontalSlider4.value()))
-
-
-	# Change HorizontalSlider values
-	ui.spinBox1.valueChanged.connect(lambda: ui.horizontalSlider1.setValue(ui.spinBox1.value()))
-	ui.spinBox2.valueChanged.connect(lambda: ui.horizontalSlider2.setValue(ui.spinBox2.value()))
-	ui.spinBox3.valueChanged.connect(lambda: ui.horizontalSlider3.setValue(ui.spinBox3.value()))
-	ui.spinBox4.valueChanged.connect(lambda: ui.horizontalSlider4.setValue(ui.spinBox4.value()))
-
-	# Connect buttons
-	# ui.pushButton1.clicked.connect()
-	ui.pushButton2.clicked.connect(lambda: ui.lineEdit1.setText(str(random.randint(0, 9999_9999_9999_9999))))
-	ui.pushButton3.clicked.connect(lambda: ui.lineEdit1.setText("-1"))
-	ui.pushButton4.clicked.connect(lambda: threading.Thread(target=generate).start())
-
-	sys.exit(app.exec())
+	app = IMGenAI()
+	app.run()

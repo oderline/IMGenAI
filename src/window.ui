@@ -5,6 +5,9 @@
   <property name="windowModality">
    <enum>Qt::WindowModality::NonModal</enum>
   </property>
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -12,6 +15,9 @@
     <width>1000</width>
     <height>762</height>
    </rect>
+  </property>
+  <property name="acceptDrops">
+   <bool>false</bool>
   </property>
   <property name="windowTitle">
    <string>IMGenAI</string>
@@ -23,6 +29,9 @@
    </size>
   </property>
   <widget class="QWidget" name="centralwidget">
+   <property name="acceptDrops">
+    <bool>false</bool>
+   </property>
    <widget class="QWidget" name="widget1" native="true">
     <property name="geometry">
      <rect>
@@ -452,6 +461,9 @@
       <height>720</height>
      </rect>
     </property>
+    <property name="acceptDrops">
+     <bool>false</bool>
+    </property>
     <property name="autoFillBackground">
      <bool>false</bool>
     </property>
@@ -514,7 +526,7 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="open_prompt"/>
+    <addaction name="open_file"/>
     <addaction name="save_prompt"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
@@ -564,9 +576,9 @@
     <string>Save prompts</string>
    </property>
   </action>
-  <action name="open_prompt">
+  <action name="open_file">
    <property name="text">
-    <string>Open prompt</string>
+    <string>Open file</string>
    </property>
   </action>
   <action name="save_prompt">
@@ -615,6 +627,11 @@
    </property>
    <property name="text">
     <string>Allow NSFW content</string>
+   </property>
+  </action>
+  <action name="open_image">
+   <property name="text">
+    <string>Open image</string>
    </property>
   </action>
  </widget>
