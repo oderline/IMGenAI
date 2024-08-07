@@ -38,7 +38,7 @@
       <x>10</x>
       <y>10</y>
       <width>250</width>
-      <height>720</height>
+      <height>663</height>
      </rect>
     </property>
     <widget class="QLabel" name="label5">
@@ -296,7 +296,7 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>695</y>
+       <y>638</y>
        <width>250</width>
        <height>25</height>
       </rect>
@@ -448,66 +448,6 @@
       <string>Height</string>
      </property>
     </widget>
-    <widget class="QSlider" name="horizontalSlider5">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>663</y>
-       <width>250</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <property name="minimum">
-      <number>1</number>
-     </property>
-     <property name="maximum">
-      <number>9</number>
-     </property>
-     <property name="singleStep">
-      <number>1</number>
-     </property>
-     <property name="value">
-      <number>1</number>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
-     </property>
-     <property name="tickPosition">
-      <enum>QSlider::TickPosition::NoTicks</enum>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label9">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>638</y>
-       <width>197</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Batch size (IPP)</string>
-     </property>
-    </widget>
-    <widget class="QSpinBox" name="spinBox5">
-     <property name="geometry">
-      <rect>
-       <x>200</x>
-       <y>635</y>
-       <width>50</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <property name="minimum">
-      <number>1</number>
-     </property>
-     <property name="maximum">
-      <number>9</number>
-     </property>
-     <property name="value">
-      <number>1</number>
-     </property>
-    </widget>
    </widget>
    <widget class="QLabel" name="image">
     <property name="enabled">
@@ -594,11 +534,9 @@
      <string>Settings</string>
     </property>
     <addaction name="toggle_sidebar"/>
-    <addaction name="show_status_bar"/>
     <addaction name="separator"/>
     <addaction name="save_images"/>
     <addaction name="save_prompts"/>
-    <addaction name="show_image_prompt"/>
     <addaction name="separator"/>
     <addaction name="NSFW_content"/>
     <addaction name="configuration"/>
@@ -694,28 +632,6 @@
   <action name="open_image">
    <property name="text">
     <string>Open image</string>
-   </property>
-  </action>
-  <action name="show_image_prompt">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Show image prompt</string>
-   </property>
-  </action>
-  <action name="show_status_bar">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Show status bar</string>
    </property>
   </action>
  </widget>

@@ -1,10 +1,11 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 # from PIL.PngImagePlugin import PngInfo
-from PIL import Image
+from PIL import Image, ImageFilter
 
-import threading, requests, base64, random, ujson, sys, os
+import threading, requests, base64, random, sys, os
 from time import sleep
+import ujson as json
 
 from window import Ui_MainWindow
 from config import Ui_Dialog
@@ -38,7 +39,7 @@ class IMGenAI():
 		self.main_window.configuration.setIcon(QtGui.QIcon().fromTheme("document-properties"))
 		self.main_window.reset_prompt.setIcon(QtGui.QIcon().fromTheme("view-restore"))
 
-		# Configure shorttcut keys
+		# Configure shortcut keys
 		self.main_window.pushButton4.setShortcut(QtGui.QKeySequence("Ctrl+Return"))
 
 		# Configure "File" menu functions
@@ -48,7 +49,7 @@ class IMGenAI():
 
 		# Configure "Settings" menu functions
 		self.main_window.toggle_sidebar.triggered.connect(self.toggleSidebar)
-		self.main_window.configuration.triggered.connect(self.configuWindow)
+		self.main_window.configuration.triggered.connect(self.configureWindow)
 		self.main_window.reset_prompt.triggered.connect(lambda: self.setValues({
 			"prompt": "",
 			"negative_prompt": "",
@@ -56,7 +57,8 @@ class IMGenAI():
 			"sampling_steps": 20,
 			"width": 512,
 			"height": 512,
-			"guidance_scale": 7
+			"guidance_scale": 7,
+
 		}))
 
 		# Configure "Help" menu functions
@@ -67,19 +69,21 @@ class IMGenAI():
 		self.main_window.horizontalSlider2.valueChanged.connect(lambda: self.main_window.spinBox2.setValue(self.main_window.horizontalSlider2.value()))
 		self.main_window.horizontalSlider3.valueChanged.connect(lambda: self.main_window.spinBox3.setValue(self.main_window.horizontalSlider3.value()))
 		self.main_window.horizontalSlider4.valueChanged.connect(lambda: self.main_window.spinBox4.setValue(self.main_window.horizontalSlider4.value()))
+		self.main_window.horizontalSlider5.valueChanged.connect(lambda: self.main_window.spinBox5.setValue(self.main_window.horizontalSlider5.value()))
 
 		# Change HorizontalSlider values
 		self.main_window.spinBox1.valueChanged.connect(lambda: self.main_window.horizontalSlider1.setValue(self.main_window.spinBox1.value()))
 		self.main_window.spinBox2.valueChanged.connect(lambda: self.main_window.horizontalSlider2.setValue(self.main_window.spinBox2.value()))
 		self.main_window.spinBox3.valueChanged.connect(lambda: self.main_window.horizontalSlider3.setValue(self.main_window.spinBox3.value()))
 		self.main_window.spinBox4.valueChanged.connect(lambda: self.main_window.horizontalSlider4.setValue(self.main_window.spinBox4.value()))
+		self.main_window.spinBox5.valueChanged.connect(lambda: self.main_window.horizontalSlider5.setValue(self.main_window.spinBox5.value()))
 
 		# Connect buttons
 		self.main_window.pushButton2.clicked.connect(lambda: self.main_window.lineEdit1.setText(str(random.randint(0, 9999_9999_9999_9999))))
 		self.main_window.pushButton3.clicked.connect(lambda: self.main_window.lineEdit1.setText("-1"))
 		self.main_window.pushButton4.clicked.connect(lambda: threading.Thread(target=self.generate).start())
 
-	def configuWindow(self) -> None:
+	def configureWindow(self) -> None:
 		from PyQt6.QtWidgets import QDialog
 		self.ConfigWindow = QDialog()
 		self.config_window = Ui_Dialog()
@@ -111,9 +115,26 @@ class IMGenAI():
 				filter="Image/Text files (*.png *.txt)"
 			)
 
-			with open(filename[0], "r") as f:
-				data: dict = ujson.load(f)
-				f.close()
+			# if image file (png)
+			if filename[0].endswith(".png"):
+				# Open image
+				if self.main_window.show_image_prompt.isChecked():
+					pixmap: QtGui.QPixmap = QtGui.QPixmap(filename[0])
+
+					# Resize image
+					if pixmap.width() > self.main_window.image.width() or pixmap.height() > self.main_window.image.height():
+						pixmap = pixmap.scaled(720, 720, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation)
+
+					self.main_window.image.setPixmap(pixmap)
+
+				image = Image.open(filename[0])
+				data = image.text
+
+			# if text file
+			else:
+				with open(filename[0], "r") as f:
+					data: dict = json.load(f)
+					f.close()
 
 			self.setValues(data)
 			self.last_used_seed = int(data["seed"])
@@ -131,7 +152,7 @@ class IMGenAI():
 				data: dict = self. getValues()
 				# data["seed"] = str(self.last_used_seed)
 				data["seed"] = self.last_used_seed
-				f.write(ujson.dumps(data, indent=4))
+				f.write(json.dumps(data, indent=4))
 				f.close()
 		except:
 			...
@@ -155,7 +176,8 @@ class IMGenAI():
 			"width": self.main_window.spinBox2.value(),
 			"height": self.main_window.spinBox3.value(),
 			"guidance_scale": self.main_window.spinBox4.value(),
-			"NSFW_content": int(self.main_window.NSFW_content.isChecked())
+			"num_images": self.main_window.spinBox5.value(),
+			"NSFW_content": int(self.main_window.NSFW_content.isChecked()),
 		}
 
 	def setValues(self, data: dict) -> None:
@@ -169,15 +191,85 @@ class IMGenAI():
 
 		# For compatibility with old prompt files
 		try:
+			self.main_window.spinBox5.setValue(int(data["num_images"]))
+		except:
+			self.main_window.spinBox5.setValue(1)
+
+		try:
 			self.main_window.NSFW_content.setChecked(data["NSFW_content"])
 		except:
 			self.main_window.NSFW_content.setChecked(False)
 
 	def setStatusBarText(self, text: str, time: int = 5) -> None:
-		self.main_window.statusbar.show()
-		self.MainWindow.statusBar().showMessage(text)
-		sleep(time)
-		self.main_window.statusbar.hide() if time > 0 else ...
+		if self.main_window.show_status_bar.isChecked():
+			self.main_window.statusbar.show()
+			self.MainWindow.statusBar().showMessage(text)
+			sleep(time)
+			self.main_window.statusbar.hide() if time > 0 else ...
+		else:
+			self.main_window.statusbar.hide()
+
+
+	def postRequest(self, url: str, data: dict) -> tuple:
+		try:
+			# Update status bar
+			threading.Thread(target=self.setStatusBarText, args=("Generating image(s)...", 0)).start()
+
+			response: requests.Response = requests.post(url, data)
+			response_data: dict = json.loads(response.content)
+
+			# Generated images
+			final_image = base64.b64decode(response_data["final"])
+
+			# Try to get all images
+			try:
+				all_images = [base64.b64decode(image) for image in response_data["images"]]
+			except:
+				all_images = None
+
+			# Update status bar
+			threading.Thread(target=self.setStatusBarText, args=(f"Image(s) generated successfully!", 0)).start()
+
+			return final_image, all_images
+		except Exception as e:
+			threading.Thread(target=self.setStatusBarText, args=(f"{e}",)).start()
+			return
+
+
+	def saveImagesAndPrompts(self, data, final, all) -> None:
+		# Get date and time
+		date: str = QtCore.QDate.currentDate().toString("dd-MM-yyyy")
+		time: str = QtCore.QTime.currentTime().toString("hh-mm-ss")
+
+		# Save images
+		if self.main_window.save_images.isChecked():
+			# Final image
+			if final != None:
+				image_file: str = f"output/images/{date}/image_{time}_0.png"
+				os.makedirs(os.path.dirname(image_file), exist_ok=True)
+				open(image_file, "wb").write(final)
+
+			# All images
+			if all != None:
+				for i, image in enumerate(all):
+					image_file: str = f"output/images/{date}/image_{time}_{i+1}.png"
+					os.makedirs(os.path.dirname(image_file), exist_ok=True)
+					open(image_file, "wb").write(image)
+
+		# Save prompts
+		if self.main_window.save_prompts.isChecked():
+			# Final image
+			if final != None:
+				prompt_file: str = f"output/prompts/{date}/image_{time}_0.txt"
+				os.makedirs(os.path.dirname(prompt_file), exist_ok=True)
+				open(prompt_file, "w").write(json.dumps(data, indent=4))
+
+			# All images
+			if all != None:
+				for i, image in enumerate(all):
+					prompt_file: str = f"output/prompts/{date}/image_{time}_{i+1}.txt"
+					os.makedirs(os.path.dirname(prompt_file), exist_ok=True)
+					open(prompt_file, "w").write(json.dumps(data, indent=4))
 
 	def generate(self) -> None:
 		# Get url and prompt data
@@ -188,38 +280,16 @@ class IMGenAI():
 		global last_used_seed
 		last_used_seed = int(data["seed"])
 
-		# POST request and response
-		try:
-			threading.Thread(target=self.setStatusBarText, args=("Generating image...", 0)).start()
-			responce: requests.Response = requests.post(url, data)
-			img: bytes = base64.b64decode(responce.content)
-		except Exception as e:
-			threading.Thread(target=self.setStatusBarText, args=(f"{e}",)).start()
-			return
 
-		# Get date and time
-		date: str = QtCore.QDate.currentDate().toString("dd-MM-yyyy")
-		time: str = QtCore.QTime.currentTime().toString("hh-mm-ss")
+		# POST request
+		final_image, all_images = self.postRequest(url, data)
 
-		# Save images
-		if self.main_window.save_images.isChecked():
-			image_file: str = f"output/images/{date}/image_{time}.png"
-			os.makedirs(os.path.dirname(image_file), exist_ok=True)
-			with open(image_file, "wb") as f:
-				f.write(img)
-				f.close()
-
-		# Save prompts
-		if self.main_window.save_prompts.isChecked():
-			prompt_file: str = f"output/prompts/{date}/image_{time}.txt"
-			os.makedirs(os.path.dirname(prompt_file), exist_ok=True)
-			with open(prompt_file, "w") as f:
-				f.write(ujson.dumps(data, indent=4))
-				f.close()
+		# Save images and prompts
+		self.saveImagesAndPrompts(data, final_image, all_images)
 
 		# Create pixmap
 		pixmap: QtGui.QPixmap = QtGui.QPixmap()
-		pixmap.loadFromData(img)
+		pixmap.loadFromData(final_image)
 
 		# Resize image
 		if pixmap.width() > self.main_window.image.width() or pixmap.height() > self.main_window.image.height():
@@ -233,7 +303,6 @@ class IMGenAI():
 
 		# Update status bar
 		self.main_window.statusbar.hide()
-		# threading.Thread(target=self.main_window.statusbar.hide(), args=()).start()
 
 
 if __name__ == "__main__":
