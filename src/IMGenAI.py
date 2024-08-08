@@ -35,21 +35,21 @@ class IMGenAI():
 	def setupMainWindowUI(self) -> None:
 		# Set icons
 		self.main_window.open_file.setIcon(QtGui.QIcon().fromTheme("document-open"))
-		self.main_window.open_image.setIcon(QtGui.QIcon().fromTheme("document-open"))
 		self.main_window.save_prompt.setIcon(QtGui.QIcon().fromTheme("document-save"))
 		self.main_window.configuration.setIcon(QtGui.QIcon().fromTheme("document-properties"))
 		self.main_window.reset_prompt.setIcon(QtGui.QIcon().fromTheme("view-restore"))
+		self.main_window.listWidget1.setIconSize(QtCore.QSize(128, 128))
 
 		# Configure shortcut keys
 		self.main_window.pushButton4.setShortcut(QtGui.QKeySequence("Ctrl+Return"))
 
 		# Configure "File" menu functions
 		self.main_window.open_file.triggered.connect(self.openFile)
-		# self.main_window.open_image.triggered.connect(self.openImage)
 		self.main_window.save_prompt.triggered.connect(self.savePrompt)
 
 		# Configure "Settings" menu functions
-		self.main_window.toggle_sidebar.triggered.connect(self.toggleSidebar)
+		self.main_window.prompt_sidebar.triggered.connect(self.togglePromptSettingsSidebar)
+		self.main_window.image_view_sidebar.triggered.connect(self.toggleImageViewSidebar)
 		self.main_window.show_status_bar.triggered.connect(lambda: self.main_window.statusbar.show() if self.main_window.show_status_bar.isChecked() else self.main_window.statusbar.hide())
 		self.main_window.configuration.triggered.connect(self.configureWindow)
 		self.main_window.reset_prompt.triggered.connect(lambda: self.setValues({
@@ -88,6 +88,20 @@ class IMGenAI():
 		self.main_window.pushButton3.clicked.connect(lambda: self.main_window.lineEdit1.setText("-1"))
 		self.main_window.pushButton4.clicked.connect(lambda: threading.Thread(target=self.generate, args=(self.main_window.spinBox6.value(),)).start())
 
+		# self.main_window.listWidget1.clicked.connect(lambda: self.main_window.listWidget1.clear())
+		self.main_window.listWidget1.clicked.connect(lambda: self.imageSelected())
+
+	def imageSelected(self):
+		# Open image and set values
+		image_path = self.main_window.listWidget1.model().itemData(self.main_window.listWidget1.selectedIndexes()[0])[0]
+		self.openImage(image_path)
+
+		try:
+			self.setValues(self.getMetadataFromImage(image_path))
+		except:
+			threading.Thread(target=self.setStatusBarText, args=("No prompt data found!", 5)).start()
+			return
+
 	def configureWindow(self) -> None:
 		from PyQt6.QtWidgets import QDialog
 		self.ConfigWindow = QDialog()
@@ -112,6 +126,19 @@ class IMGenAI():
 	# 	z = self.config_window.listView.model().itemData(y[0])[0]
 	# 	print(z)
 
+	def openImage(self, image_path: str) -> None:
+		pixmap: QtGui.QPixmap = QtGui.QPixmap(image_path)
+
+		# Resize image
+		if pixmap.width() > self.main_window.image.width() or pixmap.height() > self.main_window.image.height():
+			pixmap = pixmap.scaled(720, 720, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation)
+
+		self.main_window.image.setPixmap(pixmap)
+
+	def getMetadataFromImage(self, image_path: str) -> None:
+		image = Image.open(image_path)
+		return Image.open(image_path).text
+
 	def openFile(self) -> None:
 		try:
 			filename = QtWidgets.QFileDialog().getOpenFileName(
@@ -120,20 +147,12 @@ class IMGenAI():
 				filter="Image/Text files (*.png *.txt)"
 			)
 
-			# if image file (png)
 			if filename[0].endswith(".png"):
-				# Open image
+				# try:
+				data: dict = self.getMetadataFromImage(filename[0])
+
 				if self.main_window.show_image_prompt.isChecked():
-					pixmap: QtGui.QPixmap = QtGui.QPixmap(filename[0])
-
-					# Resize image
-					if pixmap.width() > self.main_window.image.width() or pixmap.height() > self.main_window.image.height():
-						pixmap = pixmap.scaled(720, 720, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation)
-
-					self.main_window.image.setPixmap(pixmap)
-
-				image = Image.open(filename[0])
-				data = image.text
+					self.openImage(filename[0])
 
 			# if text file
 			else:
@@ -141,8 +160,11 @@ class IMGenAI():
 					data: dict = json.load(f)
 					f.close()
 
-			self.setValues(data)
-			self.last_used_seed = int(data["seed"])
+			try:
+				self.setValues(data)
+				self.last_used_seed = int(data["seed"])
+			except:
+				threading.Thread(target=self.setStatusBarText, args=("No prompt data found!", 5)).start()
 		except:
 			...
 
@@ -162,15 +184,33 @@ class IMGenAI():
 		except:
 			...
 
-	def toggleSidebar(self) -> None:
-		if self.main_window.toggle_sidebar.isChecked():
-			self.MainWindow.setFixedSize(1080, self.MainWindow.height())
+	def togglePromptSettingsSidebar(self) -> None:
+		size = self.MainWindow.geometry().size()
+
+		if self.main_window.prompt_sidebar.isChecked():
+			self.MainWindow.setFixedSize(size.width() + 260, self.MainWindow.height())
 			self.main_window.image.setGeometry(QtCore.QRect(270, 10, 800, 800))
+			self.main_window.widget2.setGeometry(QtCore.QRect(1080, 10, 160, 800))
+			self.main_window.widget1.setEnabled(True)
 			self.main_window.widget1.show()
 		else:
-			self.MainWindow.setFixedSize(820, self.MainWindow.height())
+			self.MainWindow.setFixedSize(size.width() - 260, self.MainWindow.height())
 			self.main_window.image.setGeometry(QtCore.QRect(10, 10, 800, 800))
+			self.main_window.widget2.setGeometry(QtCore.QRect(820, 10, 160, 800))
+			self.main_window.widget1.setEnabled(False)
 			self.main_window.widget1.hide()
+
+	def toggleImageViewSidebar(self):
+		size = self.MainWindow.geometry().size()
+
+		if self.main_window.image_view_sidebar.isChecked():
+			self.MainWindow.setFixedSize(size.width() + 168, self.MainWindow.height())
+			self.main_window.widget2.setEnabled(True)
+			self.main_window.widget2.show()
+		else:
+			self.MainWindow.setFixedSize(size.width() - 168, self.MainWindow.height())
+			self.main_window.widget2.setEnabled(False)
+			self.main_window.widget2.hide()
 
 	def getValues(self) -> dict:
 		return {
@@ -183,7 +223,8 @@ class IMGenAI():
 			"height": self.main_window.spinBox3.value(),
 			"guidance_scale": self.main_window.spinBox4.value(),
 			"num_images": self.main_window.spinBox5.value(),
-			"NSFW_content": int(self.main_window.NSFW_content.isChecked()),
+			# "batch_count": self.main_window.spinBox6.value(),
+			"NSFW_content": int(self.main_window.NSFW_content.isChecked())
 		}
 
 	def setValues(self, data: dict) -> None:
@@ -201,56 +242,61 @@ class IMGenAI():
 		except:
 			self.main_window.spinBox5.setValue(1)
 
+		# try:
+		# 	self.main_window.spinBox6.setValue(int(data["batch_count"]))
+		# except:
+		# 	self.main_window.spinBox6.setValue(1)
+
 		try:
 			self.main_window.NSFW_content.setChecked(data["NSFW_content"])
 		except:
 			self.main_window.NSFW_content.setChecked(False)
 
-	def setStatusBarText(self, text: str, time: int = 5) -> None:
-		self.main_window.statusbar.show()
+	def setStatusBarText(self, text: str, time: int = 2, keep: bool = False) -> None:
 		self.MainWindow.statusBar().showMessage(text)
-		if time > 0:
-			sleep(time)
-			self.main_window.statusbar.hide()
+		self.main_window.statusbar.show()
 
+		sleep(time)
+
+		self.main_window.statusbar.hide() if keep == False else ...
 
 	def postRequest(self, url: str, data: dict) -> tuple:
-		try:
-			# Update status bar
-			threading.Thread(target=self.setStatusBarText, args=("Generating image(s)...", 0)).start()
+		# Update status bar
+		threading.Thread(target=self.setStatusBarText, args=("Generating image(s)...", 2, True)).start()
 
-			# get response from server
-			if self.in_generation_process == True:
+		# get response from server
+		if self.in_generation_process == True:
+			try:
 				response: requests.Response = requests.post(url, data)
 				response_data: dict = json.loads(response.content)
-			else:
-				threading.Thread(target=self.setStatusBarText, args=("Image generation interrupted", 5)).start()
+			except Exception as e:
+				threading.Thread(target=self.setStatusBarText, args=(f"{e}", 2)).start()
 				return
+		else:
+			threading.Thread(target=self.setStatusBarText, args=("Image generation interrupted",)).start()
+			return
 
-			# Final result
-			if self.in_generation_process == True:
-				final_image = base64.b64decode(response_data["final"])
-			else:
-				threading.Thread(target=self.setStatusBarText, args=(f"Image generation interrupted", 5)).start()
-				return
+		# Final result
+		if self.in_generation_process == True:
+			final_image = base64.b64decode(response_data["final"])
+		else:
+			threading.Thread(target=self.setStatusBarText, args=(f"Image generation interrupted",)).start()
+			return
 
-			# Try to get all images
-			if self.in_generation_process == True:
-				try:
-					all_images = [base64.b64decode(image) for image in response_data["images"]]
-				except:
-					all_images = None
-			else:
-				threading.Thread(target=self.setStatusBarText, args=(f"Image generation interrupted", 5)).start()
-				return
+		# Try to get all images
+		if self.in_generation_process == True:
+			try:
+				all_images = [base64.b64decode(image) for image in response_data["images"]]
+			except:
+				all_images = None
+		else:
+			threading.Thread(target=self.setStatusBarText, args=(f"Image generation interrupted",)).start()
+			return
 
-			# Update status bar
-			threading.Thread(target=self.setStatusBarText, args=(f"Image(s) generated successfully!", 5)).start()
+		# Update status bar
+		threading.Thread(target=self.setStatusBarText, args=(f"Image(s) generated successfully!",)).start()
 
-			return final_image, all_images
-		except Exception as e:
-			threading.Thread(target=self.setStatusBarText, args=(f"{e}",)).start()
-			return [None, None]
+		return final_image, all_images
 
 
 	def saveImagesAndPrompts(self, data, final, all) -> None:
@@ -265,6 +311,7 @@ class IMGenAI():
 				image_file: str = f"output/images/{date}/image_{time}_0.png"
 				os.makedirs(os.path.dirname(image_file), exist_ok=True)
 				open(image_file, "wb").write(final)
+				self.addImageToList(image_file)
 
 			# All images
 			if all != None:
@@ -272,6 +319,7 @@ class IMGenAI():
 					image_file: str = f"output/images/{date}/image_{time}_{i+1}.png"
 					os.makedirs(os.path.dirname(image_file), exist_ok=True)
 					open(image_file, "wb").write(image)
+					self.addImageToList(image_file)
 
 		# Save prompts
 		if self.main_window.save_prompts.isChecked():
@@ -287,6 +335,12 @@ class IMGenAI():
 					prompt_file: str = f"output/prompts/{date}/image_{time}_{i+1}.txt"
 					os.makedirs(os.path.dirname(prompt_file), exist_ok=True)
 					open(prompt_file, "w").write(json.dumps(data, indent=4))
+
+	def addImageToList(self, image_path) -> None:
+		icon = QtGui.QIcon(image_path)
+		# item = QtWidgets.QListWidgetItem(icon, None)
+		item = QtWidgets.QListWidgetItem(icon, image_path)
+		self.main_window.listWidget1.addItem(item)
 
 	def generate(self, batch_count) -> None:
 		if self.in_generation_process == True:
@@ -315,7 +369,7 @@ class IMGenAI():
 			self.main_window.pushButton4.setShortcut(QtGui.QKeySequence("Ctrl+Shift+Return"))
 
 		else:
-			threading.Thread(target=self.setStatusBarText, args=("Image generation interrupted!", 5)).start()
+			threading.Thread(target=self.setStatusBarText, args=("Image generation interrupted!", 2)).start()
 			return
 
 		if self.in_generation_process == True:
@@ -324,21 +378,31 @@ class IMGenAI():
 				if self.in_generation_process == True:
 					data["seed"] = random.randint(0, 9999_9999_9999_9999) if random_seed == True else data["seed"]
 				else:
-					threading.Thread(target=self.setStatusBarText, args=("Image generation interrupted!", 5)).start()
+					threading.Thread(target=self.setStatusBarText, args=("Image generation interrupted!",)).start()
 					return
 
 				# POST request
 				if self.in_generation_process == True:
-					final_image, all_images = self.postRequest(url, data)
+					try:
+						final_image, all_images = self.postRequest(url, data)
+					except Exception as e:
+						self.in_generation_process = False
+						self.main_window.pushButton4.setText("Generate (Ctrl + Return)")
+						self.main_window.pushButton4.setShortcut(QtGui.QKeySequence("Ctrl+Return"))
+						return
 				else:
-					threading.Thread(target=self.setStatusBarText, args=("Image generation interrupted!", 5)).start()
+					threading.Thread(target=self.setStatusBarText, args=("Image generation interrupted!",)).start()
 					return
 
 				# Save images and prompts
 				if self.in_generation_process == True:
-					self.saveImagesAndPrompts(data, final_image, all_images)
+					if final_image != None:
+						self.saveImagesAndPrompts(data, final_image, all_images)
 				else:
-					threading.Thread(target=self.setStatusBarText, args=("Image generation interrupted!", 5)).start()
+					threading.Thread(target=self.setStatusBarText, args=("Image generation interrupted!",)).start()
+					self.in_generation_process = False
+					self.main_window.pushButton4.setText("Generate (Ctrl + Return)")
+					self.main_window.pushButton4.setShortcut(QtGui.QKeySequence("Ctrl+Return"))
 					return
 
 				# Create pixmap
@@ -347,12 +411,12 @@ class IMGenAI():
 
 				# Resize image
 				if pixmap.width() > self.main_window.image.width() or pixmap.height() > self.main_window.image.height():
-					pixmap = pixmap.scaled(720, 720, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation)
+					pixmap = pixmap.scaled(self.main_window.image.width(), self.main_window.image.height(), QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation)
 
 				# Display image
 				self.main_window.image.setPixmap(pixmap)
 		else:
-			threading.Thread(target=self.setStatusBarText, args=("Image generation interrupted!", 5)).start()
+			threading.Thread(target=self.setStatusBarText, args=("Image generation interrupted!",)).start()
 			return
 
 		self.in_generation_process = False
