@@ -18,6 +18,7 @@ class IMGenAI():
 	def __init__(self) -> None:
 		# For correct prompt saving
 		self.last_used_seed: int = -1
+		self.in_generation_process = False
 
 	def run(self) -> None:
 		self.app = QtWidgets.QApplication(sys.argv)
@@ -49,6 +50,7 @@ class IMGenAI():
 
 		# Configure "Settings" menu functions
 		self.main_window.toggle_sidebar.triggered.connect(self.toggleSidebar)
+		self.main_window.show_status_bar.triggered.connect(lambda: self.main_window.statusbar.show() if self.main_window.show_status_bar.isChecked() else self.main_window.statusbar.hide())
 		self.main_window.configuration.triggered.connect(self.configureWindow)
 		self.main_window.reset_prompt.triggered.connect(lambda: self.setValues({
 			"prompt": "",
@@ -58,7 +60,8 @@ class IMGenAI():
 			"width": 512,
 			"height": 512,
 			"guidance_scale": 7,
-
+			"num_images": 1,
+			"NSFW_content": 0,
 		}))
 
 		# Configure "Help" menu functions
@@ -70,6 +73,7 @@ class IMGenAI():
 		self.main_window.horizontalSlider3.valueChanged.connect(lambda: self.main_window.spinBox3.setValue(self.main_window.horizontalSlider3.value()))
 		self.main_window.horizontalSlider4.valueChanged.connect(lambda: self.main_window.spinBox4.setValue(self.main_window.horizontalSlider4.value()))
 		self.main_window.horizontalSlider5.valueChanged.connect(lambda: self.main_window.spinBox5.setValue(self.main_window.horizontalSlider5.value()))
+		self.main_window.horizontalSlider6.valueChanged.connect(lambda: self.main_window.spinBox6.setValue(self.main_window.horizontalSlider6.value()))
 
 		# Change HorizontalSlider values
 		self.main_window.spinBox1.valueChanged.connect(lambda: self.main_window.horizontalSlider1.setValue(self.main_window.spinBox1.value()))
@@ -77,11 +81,12 @@ class IMGenAI():
 		self.main_window.spinBox3.valueChanged.connect(lambda: self.main_window.horizontalSlider3.setValue(self.main_window.spinBox3.value()))
 		self.main_window.spinBox4.valueChanged.connect(lambda: self.main_window.horizontalSlider4.setValue(self.main_window.spinBox4.value()))
 		self.main_window.spinBox5.valueChanged.connect(lambda: self.main_window.horizontalSlider5.setValue(self.main_window.spinBox5.value()))
+		self.main_window.spinBox6.valueChanged.connect(lambda: self.main_window.horizontalSlider6.setValue(self.main_window.spinBox6.value()))
 
 		# Connect buttons
 		self.main_window.pushButton2.clicked.connect(lambda: self.main_window.lineEdit1.setText(str(random.randint(0, 9999_9999_9999_9999))))
 		self.main_window.pushButton3.clicked.connect(lambda: self.main_window.lineEdit1.setText("-1"))
-		self.main_window.pushButton4.clicked.connect(lambda: threading.Thread(target=self.generate).start())
+		self.main_window.pushButton4.clicked.connect(lambda: threading.Thread(target=self.generate, args=(self.main_window.spinBox6.value(),)).start())
 
 	def configureWindow(self) -> None:
 		from PyQt6.QtWidgets import QDialog
@@ -159,19 +164,20 @@ class IMGenAI():
 
 	def toggleSidebar(self) -> None:
 		if self.main_window.toggle_sidebar.isChecked():
-			self.MainWindow.setFixedSize(1000, self.MainWindow.height())
-			self.main_window.image.setGeometry(QtCore.QRect(270, 10, 720, 720))
+			self.MainWindow.setFixedSize(1080, self.MainWindow.height())
+			self.main_window.image.setGeometry(QtCore.QRect(270, 10, 800, 800))
 			self.main_window.widget1.show()
 		else:
-			self.MainWindow.setFixedSize(740, self.MainWindow.height())
-			self.main_window.image.setGeometry(QtCore.QRect(10, 10, 720, 720))
+			self.MainWindow.setFixedSize(820, self.MainWindow.height())
+			self.main_window.image.setGeometry(QtCore.QRect(10, 10, 800, 800))
 			self.main_window.widget1.hide()
 
 	def getValues(self) -> dict:
 		return {
 			"prompt": self.main_window.textEdit1.toPlainText(),
 			"negative_prompt": self.main_window.textEdit2.toPlainText(),
-			"seed": int(self.main_window.lineEdit1.text()) if int(self.main_window.lineEdit1.text()) != -1 else random.randint(0, 9999_9999_9999_9999),
+			# "seed": int(self.main_window.lineEdit1.text()) if int(self.main_window.lineEdit1.text()) != -1 else random.randint(0, 9999_9999_9999_9999),
+			"seed": int(self.main_window.lineEdit1.text()),
 			"sampling_steps": self.main_window.spinBox1.value(),
 			"width": self.main_window.spinBox2.value(),
 			"height": self.main_window.spinBox3.value(),
@@ -201,12 +207,10 @@ class IMGenAI():
 			self.main_window.NSFW_content.setChecked(False)
 
 	def setStatusBarText(self, text: str, time: int = 5) -> None:
-		if self.main_window.show_status_bar.isChecked():
-			self.main_window.statusbar.show()
-			self.MainWindow.statusBar().showMessage(text)
+		self.main_window.statusbar.show()
+		self.MainWindow.statusBar().showMessage(text)
+		if time > 0:
 			sleep(time)
-			self.main_window.statusbar.hide() if time > 0 else ...
-		else:
 			self.main_window.statusbar.hide()
 
 
@@ -215,25 +219,38 @@ class IMGenAI():
 			# Update status bar
 			threading.Thread(target=self.setStatusBarText, args=("Generating image(s)...", 0)).start()
 
-			response: requests.Response = requests.post(url, data)
-			response_data: dict = json.loads(response.content)
+			# get response from server
+			if self.in_generation_process == True:
+				response: requests.Response = requests.post(url, data)
+				response_data: dict = json.loads(response.content)
+			else:
+				threading.Thread(target=self.setStatusBarText, args=("Image generation interrupted", 5)).start()
+				return
 
-			# Generated images
-			final_image = base64.b64decode(response_data["final"])
+			# Final result
+			if self.in_generation_process == True:
+				final_image = base64.b64decode(response_data["final"])
+			else:
+				threading.Thread(target=self.setStatusBarText, args=(f"Image generation interrupted", 5)).start()
+				return
 
 			# Try to get all images
-			try:
-				all_images = [base64.b64decode(image) for image in response_data["images"]]
-			except:
-				all_images = None
+			if self.in_generation_process == True:
+				try:
+					all_images = [base64.b64decode(image) for image in response_data["images"]]
+				except:
+					all_images = None
+			else:
+				threading.Thread(target=self.setStatusBarText, args=(f"Image generation interrupted", 5)).start()
+				return
 
 			# Update status bar
-			threading.Thread(target=self.setStatusBarText, args=(f"Image(s) generated successfully!", 0)).start()
+			threading.Thread(target=self.setStatusBarText, args=(f"Image(s) generated successfully!", 5)).start()
 
 			return final_image, all_images
 		except Exception as e:
 			threading.Thread(target=self.setStatusBarText, args=(f"{e}",)).start()
-			return
+			return [None, None]
 
 
 	def saveImagesAndPrompts(self, data, final, all) -> None:
@@ -271,38 +288,76 @@ class IMGenAI():
 					os.makedirs(os.path.dirname(prompt_file), exist_ok=True)
 					open(prompt_file, "w").write(json.dumps(data, indent=4))
 
-	def generate(self) -> None:
-		# Get url and prompt data
-		url: str = self.main_window.lineEdit2.text()
-		data: dict = self.getValues()
+	def generate(self, batch_count) -> None:
+		if self.in_generation_process == True:
+			self.in_generation_process = False
+			self.main_window.pushButton4.setText("Generate (Ctrl + Return)")
+			self.main_window.pushButton4.setShortcut(QtGui.QKeySequence("Ctrl+Return"))
+			return
 
-		# Update last used seed
-		global last_used_seed
-		last_used_seed = int(data["seed"])
+		# Update generation status
+		self.in_generation_process = True
 
+		if self.in_generation_process == True:
+			# Get url and prompt data
+			url: str = self.main_window.lineEdit2.text()
+			data: dict = self.getValues()
 
-		# POST request
-		final_image, all_images = self.postRequest(url, data)
+			# Update last used seed
+			global last_used_seed
+			last_used_seed = int(data["seed"])
 
-		# Save images and prompts
-		self.saveImagesAndPrompts(data, final_image, all_images)
+			# Check if seed is random
+			random_seed: bool = data["seed"] == -1
 
-		# Create pixmap
-		pixmap: QtGui.QPixmap = QtGui.QPixmap()
-		pixmap.loadFromData(final_image)
+			# Update generation button
+			self.main_window.pushButton4.setText("Interrupt (Ctrl + Shift + Return)")
+			self.main_window.pushButton4.setShortcut(QtGui.QKeySequence("Ctrl+Shift+Return"))
 
-		# Resize image
-		if pixmap.width() > self.main_window.image.width() or pixmap.height() > self.main_window.image.height():
-			pixmap = pixmap.scaled(720, 720, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation)
+		else:
+			threading.Thread(target=self.setStatusBarText, args=("Image generation interrupted!", 5)).start()
+			return
 
-		# Display image
-		self.main_window.image.setPixmap(pixmap)
+		if self.in_generation_process == True:
+			for _ in range(batch_count):
+				# Randomize seed
+				if self.in_generation_process == True:
+					data["seed"] = random.randint(0, 9999_9999_9999_9999) if random_seed == True else data["seed"]
+				else:
+					threading.Thread(target=self.setStatusBarText, args=("Image generation interrupted!", 5)).start()
+					return
 
-		# Delete pixmap
-		del pixmap
+				# POST request
+				if self.in_generation_process == True:
+					final_image, all_images = self.postRequest(url, data)
+				else:
+					threading.Thread(target=self.setStatusBarText, args=("Image generation interrupted!", 5)).start()
+					return
 
-		# Update status bar
-		self.main_window.statusbar.hide()
+				# Save images and prompts
+				if self.in_generation_process == True:
+					self.saveImagesAndPrompts(data, final_image, all_images)
+				else:
+					threading.Thread(target=self.setStatusBarText, args=("Image generation interrupted!", 5)).start()
+					return
+
+				# Create pixmap
+				pixmap: QtGui.QPixmap = QtGui.QPixmap()
+				pixmap.loadFromData(final_image)
+
+				# Resize image
+				if pixmap.width() > self.main_window.image.width() or pixmap.height() > self.main_window.image.height():
+					pixmap = pixmap.scaled(720, 720, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation)
+
+				# Display image
+				self.main_window.image.setPixmap(pixmap)
+		else:
+			threading.Thread(target=self.setStatusBarText, args=("Image generation interrupted!", 5)).start()
+			return
+
+		self.in_generation_process = False
+		self.main_window.pushButton4.setText("Generate (Ctrl + Return)")
+		self.main_window.pushButton4.setShortcut(QtGui.QKeySequence("Ctrl+Return"))
 
 
 if __name__ == "__main__":
