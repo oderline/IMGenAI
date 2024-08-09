@@ -12,7 +12,7 @@ This is a project for generating images from text prompts using [Diffusers]() on
 
 # Setup desktop app:
 
-Download latest [release version](https://github.com/oderline/IMGenAI/releases) of IMGenAI app (or it's source code). In the app, paste server's public url to "Enter server address" field. Load prompt settings from text file or set it manually. Click "Generate" button and wait server's responce.
+Download latest [release version](https://github.com/oderline/IMGenAI/releases) of IMGenAI app (or it's source code). In the app, paste server's public url to "Enter server address" field. Load prompt settings from text file or set it manually. Click "Generate" button and wait server's response.
 
 # Setup python environment:
 

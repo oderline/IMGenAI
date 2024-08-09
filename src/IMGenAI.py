@@ -5,7 +5,11 @@ from time import sleep
 import ujson as json
 
 from window import Ui_MainWindow
-from config import Ui_Dialog
+from config import Ui_Config_Dialog
+from about import Ui_About_Dialog
+
+from license import about
+
 
 
 # TODO: config file (config.ini), import configparser
@@ -21,7 +25,6 @@ class IMGenAI:
 		self.MainWindow = QtWidgets.QMainWindow()
 		self.main_window = Ui_MainWindow()
 		self.main_window.setupUi(self.MainWindow)
-		self.main_window.statusbar.hide()
 		self.MainWindow.setFixedSize(self.MainWindow.size())
 		self.setupMainWindowUI()
 		self.MainWindow.show()
@@ -29,16 +32,17 @@ class IMGenAI:
 		sys.exit(self.app.exec())
 
 	def setupMainWindowUI(self) -> None:
+		self.main_window.statusbar.hide()
+
 		# Set icons
 		self.main_window.open_file.setIcon(QtGui.QIcon().fromTheme("document-open"))
 		self.main_window.save_prompt.setIcon(QtGui.QIcon().fromTheme("document-save"))
-		self.main_window.configuration.setIcon(
-			QtGui.QIcon().fromTheme("document-properties")
-		)
+		self.main_window.configuration.setIcon(QtGui.QIcon().fromTheme("document-properties"))
 		self.main_window.reset_prompt.setIcon(QtGui.QIcon().fromTheme("view-restore"))
+		self.main_window.about.setIcon(QtGui.QIcon().fromTheme("help-about"))
 
 		# Configure shortcut keys
-		self.main_window.pushButton4.setShortcut(QtGui.QKeySequence("Ctrl+Return"))
+		self.main_window.pushButton3.setShortcut(QtGui.QKeySequence("Ctrl+Return"))
 
 		# Configure "File" menu functions
 		self.main_window.open_file.triggered.connect(self.openFile)
@@ -76,7 +80,7 @@ class IMGenAI:
 		)
 
 		# Configure "Help" menu functions
-		#
+		self.main_window.about.triggered.connect(self.aboutWindow)
 
 		# Change SpinBox values
 		self.main_window.horizontalSlider1.valueChanged.connect(
@@ -143,15 +147,15 @@ class IMGenAI:
 		)
 
 		# Connect buttons
-		self.main_window.pushButton2.clicked.connect(
+		self.main_window.pushButton1.clicked.connect(
 			lambda: self.main_window.lineEdit1.setText(
 				str(random.randint(0, 9999_9999_9999_9999))
 			)
 		)
-		self.main_window.pushButton3.clicked.connect(
+		self.main_window.pushButton2.clicked.connect(
 			lambda: self.main_window.lineEdit1.setText("-1")
 		)
-		self.main_window.pushButton4.clicked.connect(
+		self.main_window.pushButton3.clicked.connect(
 			lambda: threading.Thread(
 				target=self.generate, args=(self.main_window.spinBox6.value(),)
 			).start()
@@ -161,41 +165,91 @@ class IMGenAI:
 		self.main_window.listWidget1.clicked.connect(lambda: self.imageSelected())
 
 	def imageSelected(self) -> None:
-		image_path: str = self.main_window.listWidget1.model().itemData(
-			self.main_window.listWidget1.selectedIndexes()[0]
-		)[0]
+		image_path: str = self.main_window.listWidget1.model().itemData(self.main_window.listWidget1.selectedIndexes()[0])[0]
 		self.openImage(image_path)
 
 		try:
 			self.setValues(self.getMetadataFromImage(image_path))
 		except:
-			threading.Thread(
-				target=self.setStatusBarText, args=("No prompt data found!", 5)
-			).start()
+			threading.Thread(target=self.setMainWindowStatusBarText, args=("No prompt data found!", 5, "#FF3333")).start()
 			return
 
 	def configureWindow(self) -> None:
 		self.ConfigWindow = QtWidgets.QDialog()
-		self.config_window = Ui_Dialog()
+		self.config_window = Ui_Config_Dialog()
 		self.config_window.setupUi(self.ConfigWindow)
+		self.ConfigWindow.setFixedSize(self.ConfigWindow.size())
 		self.setupConfigWindowUI()
 		self.ConfigWindow.show()
 
 	def setupConfigWindowUI(self) -> None:
-		self.config_window.listView.setMovement(QtGui.QListView.Movement.Static)
-		self.config_window.listView.setModel(QtGui.QStandardItemModel())
+		self.hideAndDisableWidgets()
+
+		self.config_window.listView1.setMovement(QtWidgets.QListView.Movement.Static)
+		self.config_window.listView1.setModel(QtGui.QStandardItemModel())
 
 		# List of configuration menu items
-		self.config_window.listView.model().appendRow(QtGui.QStandardItem("1"))
-		self.config_window.listView.model().appendRow(QtGui.QStandardItem("2"))
-		self.config_window.listView.model().appendRow(QtGui.QStandardItem("3"))
+		self.config_window.listView1.model().appendRow(QtGui.QStandardItem("General"))
+		self.config_window.listView1.model().appendRow(QtGui.QStandardItem("Image generation"))
+		self.config_window.listView1.model().appendRow(QtGui.QStandardItem("Images and prompts"))
+		self.config_window.listView1.model().appendRow(QtGui.QStandardItem("4"))
+		self.config_window.listView1.model().appendRow(QtGui.QStandardItem("5"))
 
-	# 	self.config_window.listView.clicked.connect(self.changeConfigTab)
+		self.config_window.listView1.clicked.connect(self.changeConfigTab)
 
-	# def changeConfigTab(self) -> None:
-	# 	y = self.config_window.listView.selectedIndexes()
-	# 	z = self.config_window.listView.model().itemData(y[0])[0]
-	# 	print(z)
+	def hideAndDisableWidgets(self) -> None:
+		self.config_window.widget1.hide()
+		self.config_window.widget1.setEnabled(False)
+
+		self.config_window.widget2.hide()
+		self.config_window.widget2.setEnabled(False)
+
+		self.config_window.widget3.hide()
+		self.config_window.widget3.setEnabled(False)
+
+		# self.config_window.widget4.hide()
+		# self.config_window.widget4.setEnabled(False)
+
+		# self.config_window.widget5.hide()
+		# self.config_window.widget5.setEnabled(False)
+
+	def changeConfigTab(self) -> None:
+		# TODO: Implement config menu, widgets
+		tab_name = self.config_window.listView1.model().itemData(self.config_window.listView1.selectedIndexes()[0])[0]
+		
+		# Hide and disable widgets
+		self.hideAndDisableWidgets()
+
+		# Show and enable widget
+		match tab_name:
+			case "General":
+				self.config_window.widget1.show()
+				self.config_window.widget1.setEnabled(True)
+			case "Image generation":
+				self.config_window.widget2.show()
+				self.config_window.widget2.setEnabled(True)
+			case "Images and prompts":
+				self.config_window.widget3.show()
+				self.config_window.widget3.setEnabled(True)
+			case 4:
+				# self.config_window.widget4.show()
+				# self.config_window.widget4.setEnabled(True)
+				...
+			case 5:
+				# self.config_window.widget5.show()
+				# self.config_window.widget5.setEnabled(True)
+				...
+
+	def aboutWindow(self) -> None:
+		self.AboutWindow = QtWidgets.QDialog()
+		self.about_window = Ui_About_Dialog()
+		self.about_window.setupUi(self.AboutWindow)
+		self.setupAboutWindowUI()
+		self.AboutWindow.show()
+
+	def setupAboutWindowUI(self) -> None:
+		# self.about_window.textEdit1.setMarkdown(license)
+		self.about_window.textEdit1.setMarkdown(about)
 
 	def openImage(self, image_path: str) -> None:
 		pixmap: QtGui.QPixmap = QtGui.QPixmap(image_path)
@@ -243,10 +297,9 @@ class IMGenAI:
 			try:
 				self.setValues(data)
 				self.last_used_seed = int(data["seed"])
+				threading.Thread(target=self.setMainWindowStatusBarText, args=(f"Prompt settings loaded from {filename[0]}", 5, "#5CB85C")).start()
 			except:
-				threading.Thread(
-					target=self.setStatusBarText, args=("No prompt data found!", 5)
-				).start()
+				threading.Thread(target=self.setMainWindowStatusBarText, args=("No prompt data found!", 5, "#FF3333")).start()
 		except:
 			...
 
@@ -325,17 +378,16 @@ class IMGenAI:
 		except:
 			self.main_window.NSFW_content.setChecked(False)
 
-	def setStatusBarText(self, text: str, time: int = 2, keep: bool = False) -> None:
+	def setMainWindowStatusBarText(self, text: str, time: int = 2, color: str = "#000000", keep: bool = False) -> None:
 		self.MainWindow.statusBar().showMessage(text)
+		self.MainWindow.statusBar().setStyleSheet(f"color: {color};")
 		self.main_window.statusbar.show()
 		sleep(time)
 		self.main_window.statusbar.hide() if keep == False else ...
 
-	def postRequest(self, url: str, data: dict) -> tuple:
+	def imageRequest(self, url: str, data: dict) -> tuple:
 		# Update status bar
-		threading.Thread(
-			target=self.setStatusBarText, args=("Generating image(s)...", 2, True)
-		).start()
+		threading.Thread(target=self.setMainWindowStatusBarText, args=("Generating image(s)...", 2, "#5CB85C", True)).start()
 
 		# get response from server
 		if self.in_generation_process == True:
@@ -343,21 +395,17 @@ class IMGenAI:
 				response: requests.Response = requests.post(url, data)
 				response_data: dict = json.loads(response.content)
 			except Exception as e:
-				threading.Thread(target=self.setStatusBarText, args=(f"{e}", 2)).start()
+				threading.Thread(target=self.setMainWindowStatusBarText, args=(f"{e}", 2, "#FF3333")).start()
 				return
 		else:
-			threading.Thread(
-				target=self.setStatusBarText, args=("Image generation interrupted",)
-			).start()
+			threading.Thread(target=self.setMainWindowStatusBarText, args=("Image generation interrupted", 2, "#FF3333")).start()
 			return
 
 		# Final result
 		if self.in_generation_process == True:
 			final_image: bytes = base64.b64decode(response_data["final"])
 		else:
-			threading.Thread(
-				target=self.setStatusBarText, args=(f"Image generation interrupted",)
-			).start()
+			threading.Thread(target=self.setMainWindowStatusBarText, args=(f"Image generation interrupted", 2, "#FF3333")).start()
 			return
 
 		# Try to get all images
@@ -370,13 +418,13 @@ class IMGenAI:
 				all_images: list = None
 		else:
 			threading.Thread(
-				target=self.setStatusBarText, args=(f"Image generation interrupted",)
+				target=self.setMainWindowStatusBarText, args=(f"Image generation interrupted", 2, "#FF3333")
 			).start()
 			return
 
 		# Update status bar
 		threading.Thread(
-			target=self.setStatusBarText, args=(f"Image(s) generated successfully!",)
+			target=self.setMainWindowStatusBarText, args=(f"Image(s) generated successfully!", 2, "#5CB85C")
 		).start()
 
 		return final_image, all_images
@@ -431,8 +479,8 @@ class IMGenAI:
 	def generate(self, batch_count) -> None:
 		if self.in_generation_process == True:
 			self.in_generation_process = False
-			self.main_window.pushButton4.setText("Generate (Ctrl + Return)")
-			self.main_window.pushButton4.setShortcut(QtGui.QKeySequence("Ctrl+Return"))
+			self.main_window.pushButton3.setText("Generate (Ctrl + Return)")
+			self.main_window.pushButton3.setShortcut(QtGui.QKeySequence("Ctrl+Return"))
 			return
 
 		# Update generation status
@@ -451,15 +499,13 @@ class IMGenAI:
 			random_seed: bool = data["seed"] == -1
 
 			# Update generation button
-			self.main_window.pushButton4.setText("Interrupt (Ctrl + Shift + Return)")
-			self.main_window.pushButton4.setShortcut(
+			self.main_window.pushButton3.setText("Interrupt (Ctrl + Shift + Return)")
+			self.main_window.pushButton3.setShortcut(
 				QtGui.QKeySequence("Ctrl+Shift+Return")
 			)
 
 		else:
-			threading.Thread(
-				target=self.setStatusBarText, args=("Image generation interrupted!", 2)
-			).start()
+			threading.Thread(target=self.setMainWindowStatusBarText, args=("Image generation interrupted!", 2, "#FF3333")).start()
 			return
 
 		if self.in_generation_process == True:
@@ -472,28 +518,22 @@ class IMGenAI:
 						else data["seed"]
 					)
 				else:
-					threading.Thread(
-						target=self.setStatusBarText,
-						args=("Image generation interrupted!",),
-					).start()
+					threading.Thread(target=self.setMainWindowStatusBarText,args=("Image generation interrupted!", 2, "#FF3333")).start()
 					return
 
 				# POST request
 				if self.in_generation_process == True:
 					try:
-						final_image, all_images = self.postRequest(url, data)
+						final_image, all_images = self.imageRequest(url, data)
 					except Exception as e:
 						self.in_generation_process = False
-						self.main_window.pushButton4.setText("Generate (Ctrl + Return)")
-						self.main_window.pushButton4.setShortcut(
+						self.main_window.pushButton3.setText("Generate (Ctrl + Return)")
+						self.main_window.pushButton3.setShortcut(
 							QtGui.QKeySequence("Ctrl+Return")
 						)
 						return
 				else:
-					threading.Thread(
-						target=self.setStatusBarText,
-						args=("Image generation interrupted!",),
-					).start()
+					threading.Thread(target=self.setMainWindowStatusBarText,args=("Image generation interrupted!", 2, "#FF3333")).start()
 					return
 
 				# Save images and prompts
@@ -501,15 +541,10 @@ class IMGenAI:
 					if final_image != None:
 						self.saveImagesAndPrompts(data, final_image, all_images)
 				else:
-					threading.Thread(
-						target=self.setStatusBarText,
-						args=("Image generation interrupted!",),
-					).start()
+					threading.Thread(target=self.setMainWindowStatusBarText,args=("Image generation interrupted!", 2, "#FF3333"),).start()
 					self.in_generation_process = False
-					self.main_window.pushButton4.setText("Generate (Ctrl + Return)")
-					self.main_window.pushButton4.setShortcut(
-						QtGui.QKeySequence("Ctrl+Return")
-					)
+					self.main_window.pushButton3.setText("Generate (Ctrl + Return)")
+					self.main_window.pushButton3.setShortcut(QtGui.QKeySequence("Ctrl+Return"))
 					return
 
 				# Create pixmap
@@ -531,14 +566,12 @@ class IMGenAI:
 				# Display image
 				self.main_window.image.setPixmap(pixmap)
 		else:
-			threading.Thread(
-				target=self.setStatusBarText, args=("Image generation interrupted!",)
-			).start()
+			threading.Thread(target=self.setMainWindowStatusBarText, args=("Image generation interrupted!", 2, "#FF3333")).start()
 			return
 
 		self.in_generation_process = False
-		self.main_window.pushButton4.setText("Generate (Ctrl + Return)")
-		self.main_window.pushButton4.setShortcut(QtGui.QKeySequence("Ctrl+Return"))
+		self.main_window.pushButton3.setText("Generate (Ctrl + Return)")
+		self.main_window.pushButton3.setShortcut(QtGui.QKeySequence("Ctrl+Return"))
 
 
 if __name__ == "__main__":
