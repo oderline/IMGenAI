@@ -1,4 +1,4 @@
-about = """
+text = """
 # IMGenAI
 
 Open source client-server diffusers-based Text2Img generation application
