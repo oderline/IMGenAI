@@ -8,19 +8,19 @@ from window import Ui_MainWindow
 from config import Ui_Config_Dialog
 from about import Ui_About_Dialog
 
-import license
-
 import configparser
-
-# TODO: config file (config.ini), import configparser
+import license
 
 
 class IMGenAI:
 	def __init__(self) -> None:
 		self.last_used_seed: int = -1
 		self.in_generation_process: bool = False
-		self.config_parser = configparser.ConfigParser()
-		self.config_parser.read("config.ini")
+
+
+
+
+
 
 	def run(self) -> None:
 		self.app = QtWidgets.QApplication(sys.argv)
@@ -33,7 +33,14 @@ class IMGenAI:
 
 		sys.exit(self.app.exec())
 
+
+
+
+
+
 	def setupMainWindowUI(self) -> None:
+		self.checkIfConfigExist()
+
 		self.main_window.statusbar.hide()
 
 		# Set icons
@@ -44,7 +51,7 @@ class IMGenAI:
 		self.main_window.about.setIcon(QtGui.QIcon().fromTheme("help-about"))
 
 		# Configure shortcut keys
-		self.main_window.pushButton3.setShortcut(QtGui.QKeySequence("Ctrl+Return"))
+		self.setGenerateButtonTextAndShortcut("generate")
 
 		# Configure "File" menu functions
 		self.main_window.open_file.triggered.connect(self.openFile)
@@ -53,14 +60,7 @@ class IMGenAI:
 		# Configure "Settings" menu functions
 		self.main_window.prompt_sidebar.triggered.connect(self.togglePromptSettingsSidebar)
 		self.main_window.image_view_sidebar.triggered.connect(self.toggleImageViewSidebar)
-		self.main_window.show_status_bar.triggered.connect(
-			lambda: (
-				self.main_window.statusbar.show()
-				if self.main_window.show_status_bar.isChecked()
-				else self.main_window.statusbar.hide()
-			)
-		)
-		self.main_window.configuration.triggered.connect(self.configureWindow)
+		self.main_window.configuration.triggered.connect(self.configWindow)
 		self.main_window.reset_prompt.triggered.connect(
 			lambda: self.setValues(
 				{
@@ -71,8 +71,7 @@ class IMGenAI:
 					"width": 512,
 					"height": 512,
 					"guidance_scale": 7,
-					"num_images": 1,
-					"NSFW_content": 0,
+					"num_images": 1
 				}
 			)
 		)
@@ -102,6 +101,11 @@ class IMGenAI:
 		self.main_window.pushButton3.clicked.connect(lambda: threading.Thread(target=self.generate, args=(self.main_window.spinBox6.value(),)).start())
 		self.main_window.listWidget1.clicked.connect(lambda: self.imageSelected())
 
+
+
+
+
+
 	def imageSelected(self) -> None:
 		image_path: str = self.main_window.listWidget1.model().itemData(self.main_window.listWidget1.selectedIndexes()[0])[0]
 		self.openImage(image_path)
@@ -112,7 +116,12 @@ class IMGenAI:
 			threading.Thread(target=self.setMainWindowStatusBarText, args=("No prompt data found!", 3, "#FF3333")).start()
 			return
 
-	def configureWindow(self) -> None:
+
+
+
+
+
+	def configWindow(self) -> None:
 		self.ConfigWindow = QtWidgets.QDialog()
 		self.config_window = Ui_Config_Dialog()
 		self.config_window.setupUi(self.ConfigWindow)
@@ -120,8 +129,24 @@ class IMGenAI:
 		self.setupConfigWindowUI()
 		self.ConfigWindow.show()
 
+
+
+
+
+
 	def setupConfigWindowUI(self) -> None:
 		self.hideAndDisableWidgets()
+
+		self.checkIfConfigExist()
+		config = configparser.ConfigParser()
+		config.read("config.ini")
+
+		# Connect buttons
+		self.config_window.pushButton2_1.clicked.connect(lambda: threading.Thread(target=self.setModel, args=()).start())
+		self.config_window.save_button.clicked.connect(self.saveConfig)
+
+		# Set save shortcut
+		self.config_window.save_button.setShortcut(QtGui.QKeySequence(config.get("Additional", "save_config_shortcut")))
 
 		self.config_window.listView1.setMovement(QtWidgets.QListView.Movement.Static)
 		self.config_window.listView1.setModel(QtGui.QStandardItemModel())
@@ -134,70 +159,117 @@ class IMGenAI:
 
 		self.config_window.listView1.clicked.connect(self.changeConfigTab)
 
+
+
+
+
 	def hideAndDisableWidgets(self) -> None:
 		self.config_window.widget1.hide()
 		self.config_window.widget1.setEnabled(False)
-
 		self.config_window.widget2.hide()
 		self.config_window.widget2.setEnabled(False)
-
 		self.config_window.widget3.hide()
 		self.config_window.widget3.setEnabled(False)
-
 		self.config_window.widget4.hide()
 		self.config_window.widget4.setEnabled(False)
 
 
 
-		# self.createConfigFile()
+	def setConfigStatusbarText(self, text: str, time: int = 2, color: str = "#000000", keep: bool = False) -> None:
+		self.config_window.label_statusbar.setText(text)
+		self.config_window.label_statusbar.setStyleSheet(f"color: {color};")
+		self.config_window.label_statusbar.show()
+		sleep(time)
+		self.config_window.label_statusbar.hide() if keep == False else ...
 
 
-
-	def createConfigFile(self):
-		...
+	def setGenerateButtonTextAndShortcut(self, type: str) -> None:
+		self.checkIfConfigExist()
 		config = configparser.ConfigParser()
+		config.read("config.ini")
 
-		# config["General"] = {
-		# 	"image_output_dir": "output/images/<date>",
-		# 	"prompt_output_dir": "output/prompts/<date>",
-		# 	"image_prompt_filename": "image_<time>_<index>",
-		# 	"date_format": "dd-MM-yyyy",
-		# 	"time_format": "hh-mm-ss",
-		# 	"show_status_bar": True,
-		# 	"reset_settings": True
-		# }
+		text = f"Generate ({config.get('Additional', 'generate_button_shortcut')})" if type == "generate" \
+			else f"Interrupt ({config.get('Additional', 'interrupt_button_shortcut')})"
 
-		# config["Image generation"] = {
-		# 	"use_custom_model": False,
-		# 	"model_id": "",
-		# 	"custom_model_id": ""
-		# }
+		shortcut = config.get('Additional', 'generate_button_shortcut') if type == "generate" \
+			else config.get('Additional', 'interrupt_button_shortcut')
 
-		# config["Images and prompts"] = {
-		# 	"save_images": True,
-		# 	"save_prompts": True,
-		# 	"show_prompt_image": True,
-		# 	"nsfw_content": False
-		# }
+		self.main_window.pushButton3.setText(text)
+		self.main_window.pushButton3.setShortcut(shortcut)
 
-		# config["Additional"] = {
-		# 	"generate_button_shortcut": "Ctrl+Return",
-		# 	"interrupt_button_shortcut": "Ctrl+Shift+Return",
-		# 	"save_config_shortcut": "Ctrl+S"
-		# }
 
-		# config.write(open("config.ini", "w"))
+
+
+
+	def checkIfConfigExist(self):
+		# Try to open 'config.ini' file
+		try:
+			config = configparser.ConfigParser()
+			config.read("config.ini")
+			# Try to get a setting
+			config.get("General", "image_output_dir")
+		except:
+			# Config file not found, create new one
+			config = configparser.ConfigParser()
+			config.read("config.ini")
+
+			config["General"] = {
+				"image_output_dir": "output/images/$date",
+				"prompt_output_dir": "output/prompts/$date",
+				"image_prompt_filename": "image_$time_$index",
+				"date_format": "dd-MM-yyyy",
+				"time_format": "hh-mm-ss",
+				"show_status_bar": True,
+			}
+			config["Image generation"] = {"model_id": "runwayml/stable-diffusion-v1-5"}
+			config["Images and prompts"] = {
+				"save_images": True,
+				"save_prompts": True,
+				"show_prompt_image": True,
+				"nsfw_content": False,
+			}
+			config["Additional"] = {
+				"generate_button_shortcut": "Ctrl+Return",
+				"interrupt_button_shortcut": "Ctrl+Shift+Return",
+				"save_config_shortcut": "Ctrl+S",
+			}
+
+			# Save config
+			config.write(open("config.ini", "w"))
+			threading.Thread(target=self.setConfigStatusbarText, args=("Config file created!", 2, "#5CB85C")).start()
+
+
+
+
+
+	def setModel(self):
+		threading.Thread(target=self.setConfigStatusbarText, args=("Applying model...", 2, "#5CB85C", True)).start()
+
+		url = self.config_window.lineEdit2_1.text()
+		model_id = self.config_window.lineEdit2_2.text().replace(" ", "").replace("\"", "")
+		
+		try:
+			response = requests.post(f"{url}/setmodel", {"model_id": model_id}).content
+			if bool(response["same_model"]) == True:
+				threading.Thread(target=self.setConfigStatusbarText, args=("This model already set!", 2, "#FF3333")).start()
+				return
+			else:
+				threading.Thread(target=self.setConfigStatusbarText, args=(f"Model {response["model_id"]} applied successfully!", 2, "#5CB85C")).start()
+		except Exception as e:
+			threading.Thread(target=self.setConfigStatusbarText, args=(f"{e}", 2, "#FF3333")).start()
+			return
+
+
+
 
 
 	def changeConfigTab(self) -> None:
-		# TODO: Implement config menu, widgets
 		tab_name = self.config_window.listView1.model().itemData(self.config_window.listView1.selectedIndexes()[0])[0]
 		
 		# Hide and disable widgets
 		self.hideAndDisableWidgets()
 
-		# Read and load config
-		self.config_parser.read("config.ini")
+		# Load config from file
 		self.loadConfig(tab_name)
 
 		# Show and enable widget
@@ -216,40 +288,78 @@ class IMGenAI:
 				self.config_window.widget4.setEnabled(True)
 
 
+
+
+
+
 	def loadConfig(self, config_tab) -> None:
-		match config_tab:
-			case "General":
-				self.config_window.lineEdit1_1.setText(self.config_parser.get("General", "image_output_dir").replace("<date>", ""))
-				self.config_window.lineEdit1_2.setText(self.config_parser.get("General", "prompt_output_dir").replace("<date>", ""))
-				self.config_window.lineEdit1_3.setText(self.config_parser.get("General", "image_prompt_filename"))
-				self.config_window.lineEdit1_4.setText(self.config_parser.get("General", "date_format"))
-				self.config_window.lineEdit1_5.setText(self.config_parser.get("General", "time_format"))
-			case "Image generation":
-				self.config_window.lineEdit2_1.setText(self.config_parser.get("Image generation", "model_id"))
-			case "Images and prompts":
-				self.config_window.checkBox3_1.setChecked(self.config_parser.getboolean("Images and prompts", "save_images"))
-				self.config_window.checkBox3_2.setChecked(self.config_parser.getboolean("Images and prompts", "save_prompts"))
-				self.config_window.checkBox3_3.setChecked(self.config_parser.getboolean("Images and prompts", "show_prompt_image"))
-				self.config_window.checkBox3_4.setChecked(self.config_parser.getboolean("Images and prompts", "nsfw_content"))
-			case "Additional":
-				self.main_window.pushButton3.setShortcut(QtGui.QKeySequence(self.config_parser.get("Additional", "generate_button_shortcut")))
+		self.checkIfConfigExist()
+		config = configparser.ConfigParser()
+		config.read("config.ini")
+
+		# General
+		self.config_window.lineEdit1_1.setText(config.get("General", "image_output_dir"))
+		self.config_window.lineEdit1_2.setText(config.get("General", "prompt_output_dir"))
+		self.config_window.lineEdit1_3.setText(config.get("General", "image_prompt_filename"))
+		self.config_window.lineEdit1_4.setText(config.get("General", "date_format"))
+		self.config_window.lineEdit1_5.setText(config.get("General", "time_format"))
+		self.config_window.checkBox1_1.setChecked(config.getboolean("General", "show_status_bar"))
+
+		# Image generation
+		self.config_window.lineEdit2_2.setText(config.get("Image generation", "model_id"))
+
+		# Images and prompts
+		self.config_window.checkBox3_1.setChecked(config.getboolean("Images and prompts", "save_images"))
+		self.config_window.checkBox3_2.setChecked(config.getboolean("Images and prompts", "save_prompts"))
+		self.config_window.checkBox3_3.setChecked(config.getboolean("Images and prompts", "show_prompt_image"))
+		self.config_window.checkBox3_4.setChecked(config.getboolean("Images and prompts", "nsfw_content"))
+
+		# Additional
+		self.config_window.keySequenceEdit4_1.setKeySequence(QtGui.QKeySequence(config.get("Additional", "generate_button_shortcut")))
+		self.config_window.keySequenceEdit4_2.setKeySequence(QtGui.QKeySequence(config.get("Additional", "interrupt_button_shortcut")))
+		self.config_window.keySequenceEdit4_3.setKeySequence(QtGui.QKeySequence(config.get("Additional", "save_config_shortcut")))
 
 
-	def saveConfig(self, config_tab) -> None:
-		match config_tab:
-			case "General":
-				self.config_parser.set("General", "image_output_dir", self.config_window.lineEdit1_1.text())
-				self.config_parser.set("General", "prompt_output_dir", self.config_window.lineEdit1_2.text())
-				self.config_parser.set("General", "image_prompt_filename", self.config_window.lineEdit1_3.text())
-				self.config_parser.set("General", "date_format", self.config_window.lineEdit1_4.text())
-				self.config_parser.set("General", "time_format", self.config_window.lineEdit1_5.text())
-			case "Image generation":
-				self.config_parser.set("Image generation", "model_id", self.config_window.lineEdit2_1.text())
-			case "Images and prompts":
-				self.config_parser.set("Images and prompts", "save_images", self.config_window.checkBox3_1.isChecked())
-				self.config_parser.set("Images and prompts", "save_prompts", self.config_window.checkBox3_2.isChecked())
-				self.config_parser.set("Images and prompts", "show_prompt_image", self.config_window.checkBox3_3.isChecked())
-				self.config_parser.set("Images and prompts", "nsfw_content", self.config_window.checkBox3_4.isChecked())
+
+
+
+
+	def saveConfig(self) -> None:
+		config = configparser.ConfigParser()
+		config.read("config.ini")
+
+		# General
+		config.set("General", "image_output_dir", self.config_window.lineEdit1_1.text())
+		config.set("General", "prompt_output_dir", self.config_window.lineEdit1_2.text())
+		config.set("General", "image_prompt_filename", self.config_window.lineEdit1_3.text())
+		config.set("General", "date_format", self.config_window.lineEdit1_4.text())
+		config.set("General", "time_format", self.config_window.lineEdit1_5.text())
+		config.set("General", "show_status_bar", str(self.config_window.checkBox1_1.isChecked()))
+
+		# Image generation
+		config.set("Image generation", "model_id", self.config_window.lineEdit2_2.text())
+
+		# Images and prompts
+		config.set("Images and prompts", "save_images", str(self.config_window.checkBox3_1.isChecked()))
+		config.set("Images and prompts", "save_prompts", str(self.config_window.checkBox3_2.isChecked()))
+		config.set("Images and prompts", "show_prompt_image", str(self.config_window.checkBox3_3.isChecked()))
+		config.set("Images and prompts", "nsfw_content", str(self.config_window.checkBox3_4.isChecked()))
+
+		# Additional
+		config.set("Additional", "generate_button_shortcut", self.config_window.keySequenceEdit4_1.keySequence().toString())
+		config.set("Additional", "interrupt_button_shortcut", self.config_window.keySequenceEdit4_2.keySequence().toString())
+		config.set("Additional", "save_config_shortcut", self.config_window.keySequenceEdit4_3.keySequence().toString())
+
+		# Set shortcuts and text
+		self.main_window.pushButton3.setText(f"Generate ({config.get("Additional", "generate_button_shortcut")})")
+		self.main_window.pushButton3.setShortcut(QtGui.QKeySequence(config.get("Additional", "generate_button_shortcut")))
+		self.config_window.save_button.setShortcut(QtGui.QKeySequence(config.get("Additional", "save_config_shortcut")))
+
+		# Save config
+		config.write(open("config.ini", "w"))
+		threading.Thread(target=self.setConfigStatusbarText, args=("Config file saved!", 2, "#5CB85C")).start()
+
+
 
 
 
@@ -262,17 +372,22 @@ class IMGenAI:
 		self.setupAboutWindowUI()
 		self.AboutWindow.show()
 
+
+
+
+
 	def setupAboutWindowUI(self) -> None:
 		self.about_window.textEdit1.setMarkdown(license.text)
+
+
+
+
 
 	def openImage(self, image_path: str) -> None:
 		pixmap: QtGui.QPixmap = QtGui.QPixmap(image_path)
 
 		# Resize image
-		if (
-			pixmap.width() > self.main_window.image.width()
-			or pixmap.height() > self.main_window.image.height()
-		):
+		if (pixmap.width() > self.main_window.image.width() or pixmap.height() > self.main_window.image.height()):
 			pixmap = pixmap.scaled(
 				self.main_window.image.width(),
 				self.main_window.image.height(),
@@ -282,9 +397,17 @@ class IMGenAI:
 
 		self.main_window.image.setPixmap(pixmap)
 
+
+
+
+
 	def getMetadataFromImage(self, image_path: str) -> None:
 		image: Image = Image.open(image_path)
 		return Image.open(image_path).text
+
+
+
+
 
 	def openFile(self) -> None:
 		try:
@@ -298,7 +421,10 @@ class IMGenAI:
 			if filename[0].endswith(".png"):
 				data: dict = self.getMetadataFromImage(filename[0])
 
-				if self.main_window.show_image_prompt.isChecked():
+				config = configparser.ConfigParser()
+				config.read("config.ini")
+
+				if config.getboolean("Images and prompts", "show_prompt_image") == True:
 					self.openImage(filename[0])
 
 				self.addImageToList(filename[0])
@@ -318,6 +444,11 @@ class IMGenAI:
 		except:
 			...
 
+
+
+
+
+
 	def savePrompt(self) -> None:
 		try:
 			filename = QtWidgets.QFileDialog().getSaveFileName(
@@ -331,6 +462,12 @@ class IMGenAI:
 				f.close()
 		except:
 			...
+
+
+
+
+
+
 
 	def togglePromptSettingsSidebar(self) -> None:
 		size: QtCore.QSize = self.MainWindow.geometry().size()
@@ -348,6 +485,10 @@ class IMGenAI:
 			self.main_window.widget1.setEnabled(False)
 			self.main_window.widget1.hide()
 
+
+
+
+
 	def toggleImageViewSidebar(self) -> None:
 		size: QtCore.QSize = self.MainWindow.geometry().size()
 
@@ -360,7 +501,14 @@ class IMGenAI:
 			self.main_window.widget2.setEnabled(False)
 			self.main_window.widget2.hide()
 
+
+
+
+
 	def getValues(self) -> dict:
+		self.checkIfConfigExist()
+		config = configparser.ConfigParser()
+		config.read("config.ini")
 		return {
 			"prompt": self.main_window.textEdit1.toPlainText(),
 			"negative_prompt": self.main_window.textEdit2.toPlainText(),
@@ -370,8 +518,13 @@ class IMGenAI:
 			"height": self.main_window.spinBox3.value(),
 			"guidance_scale": self.main_window.spinBox4.value(),
 			"num_images": self.main_window.spinBox5.value(),
-			"NSFW_content": int(self.main_window.NSFW_content.isChecked()),
+			# "nsfw_content": int(self.main_window.NSFW_content.isChecked()),
+			"nsfw_content": config.get("Images and prompts", "nsfw_content"),
 		}
+
+
+
+
 
 	def setValues(self, data: dict) -> None:
 		self.main_window.textEdit1.setText(str(data["prompt"]))
@@ -388,17 +541,31 @@ class IMGenAI:
 		except:
 			self.main_window.spinBox5.setValue(1)
 
-		try:
-			self.main_window.NSFW_content.setChecked(data["NSFW_content"])
-		except:
-			self.main_window.NSFW_content.setChecked(False)
+		# try:
+		# 	self.main_window.NSFW_content.setChecked(data["NSFW_content"])
+		# except:
+		# 	self.main_window.NSFW_content.setChecked(False)
+
+
+
+
+
 
 	def setMainWindowStatusBarText(self, text: str, time: int = 2, color: str = "#000000", keep: bool = False) -> None:
+		self.checkIfConfigExist()
+		config = configparser.ConfigParser()
+		config.read("config.ini")
+
 		self.MainWindow.statusBar().showMessage(text)
 		self.MainWindow.statusBar().setStyleSheet(f"color: {color};")
-		self.main_window.statusbar.show()
+		self.main_window.statusbar.show() if config.getboolean("General", "show_status_bar") == True else self.main_window.statusbar.hide()
 		sleep(time)
 		self.main_window.statusbar.hide() if keep == False else ...
+
+
+
+
+
 
 	def imageRequest(self, url: str, data: dict) -> tuple:
 		# Update status bar
@@ -438,16 +605,42 @@ class IMGenAI:
 
 		return final_image, all_images
 
+
+
+
+
 	def saveImagesAndPrompts(self, data, final, all) -> None:
+		# Get config
+		config = configparser.ConfigParser()
+		config.read("config.ini")
+
 		# Get date and time
-		date: str = QtCore.QDate.currentDate().toString("dd-MM-yyyy")
-		time: str = QtCore.QTime.currentTime().toString("hh-mm-ss")
+		date: str = QtCore.QDate.currentDate().toString(config.get("General", "date_format"))
+		time: str = QtCore.QTime.currentTime().toString(config.get("General", "time_format"))
+
+		# date: str = QtCore.QDate.currentDate().toString("dd-MM-yyyy")
+		# time: str = QtCore.QTime.currentTime().toString("hh-mm-ss")
 
 		# Save images
-		if self.main_window.save_images.isChecked():
+		# if self.main_window.save_images.isChecked():
+		if config.getboolean("Images and prompts", "save_images") == True:
 			# Final image
 			if final != None:
-				image_file: str = f"output/images/{date}/image_{time}_0.png"
+				# image_file: str = f"output/images/{date}/image_{time}_0.png"
+
+				image_file: str = f"{
+					config.get('General', 'image_output_dir')
+						.replace("$date", date)
+						.replace("$time", time)
+					}/{
+						config.get('General', 'image_prompt_filename')
+							.replace("$date", date)
+							.replace("$time", time)
+							.replace("$index", "0")
+					}.png"
+
+				# image_file: str = config.get("General", "image_output_dir").replace("$date", date).replace("$time", time).replace("$index", "0")
+
 				os.makedirs(os.path.dirname(image_file), exist_ok=True)
 				open(image_file, "wb").write(final)
 				self.addImageToList(image_file)
@@ -455,25 +648,71 @@ class IMGenAI:
 			# All images
 			if all != None:
 				for i, image in enumerate(all):
-					image_file: str = f"output/images/{date}/image_{time}_{i+1}.png"
+					# image_file: str = f"output/images/{date}/image_{time}_{i+1}.png"
+
+					# image_file: str = config.get("General", "image_output_dir").replace("$date", date).replace("$time", time)
+
+					image_file: str = f"{
+						config.get('General', 'image_output_dir')
+							.replace("$date", date)
+							.replace("$time", time)
+						}/{
+							config.get('General', 'image_prompt_filename')
+								.replace("$date", date)
+								.replace("$time", time)
+								.replace("$index", str(i+1))
+						}.png"
+
 					os.makedirs(os.path.dirname(image_file), exist_ok=True)
 					open(image_file, "wb").write(image)
 					self.addImageToList(image_file)
 
 		# Save prompts
-		if self.main_window.save_prompts.isChecked():
+		# if self.main_window.save_prompts.isChecked():
+		if config.getboolean("Images and prompts", "save_prompts") == True:
 			# Final image
 			if final != None:
-				prompt_file: str = f"output/prompts/{date}/image_{time}_0.txt"
+				# prompt_file: str = f"output/prompts/{date}/image_{time}_0.txt"
+
+				prompt_file: str = f"{
+					config.get('General', 'prompt_output_dir')
+						.replace("$date", date)
+						.replace("$time", time)
+					}/{
+						config.get('General', 'image_prompt_filename')
+							.replace("$date", date)
+							.replace("$time", time)
+							.replace("$index", "0")
+					}.txt"
+
 				os.makedirs(os.path.dirname(prompt_file), exist_ok=True)
 				open(prompt_file, "w").write(json.dumps(data, indent=4))
 
 			# All images
 			if all != None:
 				for i, image in enumerate(all):
-					prompt_file: str = f"output/prompts/{date}/image_{time}_{i+1}.txt"
+					# prompt_file: str = f"output/prompts/{date}/image_{time}_{i+1}.txt"
+
+					prompt_file: str = f"{
+						config.get('General', 'prompt_output_dir')
+							.replace("$date", date)
+							.replace("$time", time)
+						}/{
+							config.get('General', 'image_prompt_filename')
+								.replace("$date", date)
+								.replace("$time", time)
+								.replace("$index", str(i+1))
+						}.txt"
+
 					os.makedirs(os.path.dirname(prompt_file), exist_ok=True)
 					open(prompt_file, "w").write(json.dumps(data, indent=4))
+
+
+
+
+
+
+
 
 	def addImageToList(self, image_path) -> None:
 		pixmap: QtGui.QPixmap = QtGui.QPixmap(image_path)
@@ -487,9 +726,9 @@ class IMGenAI:
 
 	def generate(self, batch_count) -> None:
 		if self.in_generation_process == True:
+			self.checkIfConfigExist()
+			self.setGenerateButtonTextAndShortcut("generate")
 			self.in_generation_process = False
-			self.main_window.pushButton3.setText("Generate (Ctrl + Return)")
-			self.main_window.pushButton3.setShortcut(QtGui.QKeySequence("Ctrl+Return"))
 			return
 
 		# Update generation status
@@ -508,9 +747,8 @@ class IMGenAI:
 			random_seed: bool = data["seed"] == -1
 
 			# Update generation button
-			self.main_window.pushButton3.setText("Interrupt (Ctrl + Shift + Return)")
-			self.main_window.pushButton3.setShortcut(QtGui.QKeySequence("Ctrl+Shift+Return"))
-
+			self.checkIfConfigExist()
+			self.setGenerateButtonTextAndShortcut("interrupt")
 		else:
 			threading.Thread(target=self.setMainWindowStatusBarText, args=("Image generation interrupted!", 2, "#FF3333")).start()
 			return
@@ -534,10 +772,8 @@ class IMGenAI:
 						final_image, all_images = self.imageRequest(url, data)
 					except Exception as e:
 						self.in_generation_process = False
-						self.main_window.pushButton3.setText("Generate (Ctrl + Return)")
-						self.main_window.pushButton3.setShortcut(
-							QtGui.QKeySequence("Ctrl+Return")
-						)
+						self.checkIfConfigExist()
+						self.setGenerateButtonTextAndShortcut("generate")
 						return
 				else:
 					threading.Thread(target=self.setMainWindowStatusBarText,args=("Image generation interrupted!", 2, "#FF3333")).start()
@@ -550,8 +786,8 @@ class IMGenAI:
 				else:
 					threading.Thread(target=self.setMainWindowStatusBarText,args=("Image generation interrupted!", 2, "#FF3333"),).start()
 					self.in_generation_process = False
-					self.main_window.pushButton3.setText("Generate (Ctrl + Return)")
-					self.main_window.pushButton3.setShortcut(QtGui.QKeySequence("Ctrl+Return"))
+					self.checkIfConfigExist()
+					self.setGenerateButtonTextAndShortcut("generate")
 					return
 
 				# Create pixmap
@@ -559,10 +795,7 @@ class IMGenAI:
 				pixmap.loadFromData(final_image)
 
 				# Resize image
-				if (
-					pixmap.width() > self.main_window.image.width()
-					or pixmap.height() > self.main_window.image.height()
-				):
+				if (pixmap.width() > self.main_window.image.width() or pixmap.height() > self.main_window.image.height()):
 					pixmap = pixmap.scaled(
 						self.main_window.image.width(),
 						self.main_window.image.height(),
