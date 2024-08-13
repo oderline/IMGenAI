@@ -13,7 +13,7 @@
     <x>0</x>
     <y>0</y>
     <width>1248</width>
-    <height>842</height>
+    <height>862</height>
    </rect>
   </property>
   <property name="acceptDrops">
@@ -54,7 +54,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Sampling steps</string>
+      <string>Sampling steps:</string>
      </property>
     </widget>
     <widget class="QSpinBox" name="spinBox4">
@@ -178,7 +178,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Prompt</string>
+      <string>Prompt:</string>
      </property>
     </widget>
     <widget class="QLabel" name="label1">
@@ -194,7 +194,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Enter server address</string>
+      <string>Server URL:</string>
      </property>
     </widget>
     <widget class="QSlider" name="horizontalSlider2">
@@ -260,7 +260,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Negative prompt</string>
+      <string>Negative prompt:</string>
      </property>
     </widget>
     <widget class="QSpinBox" name="spinBox3">
@@ -295,7 +295,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Guidance scale (CFG)</string>
+      <string>Guidance scale (CFG):</string>
      </property>
     </widget>
     <widget class="QPushButton" name="pushButton3">
@@ -362,7 +362,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Seed</string>
+      <string>Seed:</string>
      </property>
     </widget>
     <widget class="QTextEdit" name="textEdit1">
@@ -438,7 +438,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Width</string>
+      <string>Width:</string>
      </property>
     </widget>
     <widget class="QLabel" name="label7">
@@ -451,7 +451,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Height</string>
+      <string>Height:</string>
      </property>
     </widget>
     <widget class="QSlider" name="horizontalSlider5">
@@ -492,7 +492,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Batch size (images per prompt)</string>
+      <string>Batch size (images per prompt):</string>
      </property>
     </widget>
     <widget class="QSpinBox" name="spinBox5">
@@ -552,7 +552,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Batch count (generation cycles)</string>
+      <string>Batch count (generation cycles):</string>
      </property>
     </widget>
     <widget class="QSpinBox" name="spinBox6">
