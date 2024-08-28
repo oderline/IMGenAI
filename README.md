@@ -1,11 +1,10 @@
-<h1 align="center">IMGenAI by Oderline</h1>
-<div align="center">
-  <img src="demo.png" alt="IMGenAI">
-</div>
-
-## IMGenAI
+<h1 align="center">IMGenAI by Oderline</h11>
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/11qjb5gWBIqp7JOAZRlTBa_Oj-9r9ttFN?usp=sharing)
+
+![IMGenAI](demo.png)
+
+## IMGenAI
 
 This is a project for generating images from text prompts with desktop app, powered by PyQt6 and [Diffusers](https://github.com/huggingface/diffusers), running on [Google Colab](https://colab.research.google.com/) VM's.
 
