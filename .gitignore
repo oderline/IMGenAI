@@ -1,8 +1,5 @@
 __pycache__
-dist
 output
-prompts
-*.txt
-config.ini
+dist
 venv
-config.ini
+*.ini
