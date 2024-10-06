@@ -4,18 +4,18 @@ All rights reserved.
 
 This project is based in part on the work of the following projects:
 
-	- PyQt (https://www.riverbankcomputing.com/software/pyqt)
-	- Diffusers (https://huggingface.co/spaces/huggingface/diffusers)
-	- Pillow (fork of PIL) (https://pillow.readthedocs.io/en/stable)
-	- etc.
+	- PyQt (https://www.riverbankcomputing.com/software/pyqt).
+	- Diffusers (https://huggingface.co/spaces/huggingface/diffusers).
+	- Pillow (fork of PIL) (https://pillow.readthedocs.io/en/stable).
+	- and others.
 
 These projects are licensed under their respective licenses.
 You can find more information about these licenses at:
 
-	- GPLv3: https://www.gnu.org/licenses/gpl-3.0
-	- Apache-2.0: https://www.apache.org/licenses/LICENSE-2.0
-	- PIL License: https://github.com/python-pillow/Pillow/blob/main/LICENSE
-	- MIT License: https://mit-license.org
+	- GPLv3: https://www.gnu.org/licenses/gpl-3.0.
+	- Apache-2.0: https://www.apache.org/licenses/LICENSE-2.0.
+	- PIL License: https://github.com/python-pillow/Pillow/blob/main/LICENSE.
+	- MIT License: https://mit-license.org.
 
 This project is licensed under MIT License. See the LICENSE file for details.
 
@@ -36,7 +36,6 @@ import configparser
 from window import Ui_MainWindow
 from config import Ui_Config_Dialog
 from about import Ui_About_Dialog
-import license
 
 
 class IMGenAI:
@@ -789,7 +788,6 @@ class IMGenAI:
 		self.AboutWindow = QtWidgets.QDialog()
 		self.about_window = Ui_About_Dialog()
 		self.about_window.setupUi(self.AboutWindow)
-		self.about_window.textEdit1.setMarkdown(license.text)
 		self.AboutWindow.show()
 
 
