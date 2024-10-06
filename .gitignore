@@ -3,9 +3,6 @@ dist
 output
 prompts
 *.txt
-<<<<<<< HEAD
 config.ini
 .venv
-=======
 config.ini
->>>>>>> 64775cfd5fff404f2519284bba0a4e9d7a7f12de
