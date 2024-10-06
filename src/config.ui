@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>IMGenAI Configuration Menu</string>
+   <string>IMGenAI configuration window</string>
   </property>
   <property name="autoFillBackground">
    <bool>false</bool>
@@ -317,7 +317,7 @@
   </widget>
   <widget class="QWidget" name="widget2" native="true">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="geometry">
     <rect>
@@ -329,7 +329,7 @@
    </property>
    <widget class="QLabel" name="label2_1">
     <property name="enabled">
-     <bool>false</bool>
+     <bool>true</bool>
     </property>
     <property name="geometry">
      <rect>

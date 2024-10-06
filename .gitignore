@@ -3,3 +3,5 @@ dist
 output
 prompts
 *.txt
+config.ini
+.venv

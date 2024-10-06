@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'src/about.ui'
+# Form implementation generated from reading ui file 'IMGenAI\src\about.ui'
 #
 # Created by: PyQt6 UI code generator 6.7.1
 #

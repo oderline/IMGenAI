@@ -1,7 +1,15 @@
+"""
+This project uses PyQt (version 6.7.1) for its graphical user interface.
+PyQt is licensed under the GNU Lesser General Public License, version 3.0 (LGPLv3).
+You can find more information about the LGPL at https://www.gnu.org/licenses/lgpl.html.
+"""
+
+# from PIL import Image, ImageFilter
+
 import threading, requests, base64, random, sys, os
 from PyQt6 import QtCore, QtGui, QtWidgets
-from PIL import Image, ImageFilter
 from time import sleep
+from PIL import Image
 import ujson as json
 import configparser
 
@@ -15,7 +23,6 @@ class IMGenAI:
 	def __init__(self) -> None:
 		self.last_used_seed: int = -1
 		self.in_generation_process: bool = False
-
 
 	def run(self) -> None:
 		self.app = QtWidgets.QApplication(sys.argv)
@@ -61,7 +68,8 @@ class IMGenAI:
 					"height": 512,
 					"guidance_scale": 7,
 					"num_images": 1,
-				}, 1 # batch count
+				},
+				batch_count=1
 			)
 		)
 
@@ -346,8 +354,7 @@ class IMGenAI:
 		pixmap: QtGui.QPixmap = QtGui.QPixmap(image_path)
 
 		# Resize image
-		if (pixmap.width() > self.main_window.image.width() \
-		or pixmap.height() > self.main_window.image.height()):
+		if (pixmap.width() > self.main_window.image.width() or pixmap.height() > self.main_window.image.height()):
 			pixmap = pixmap.scaled(
 				self.main_window.image.width(),
 				self.main_window.image.height(),
@@ -474,8 +481,8 @@ class IMGenAI:
 		self.MainWindow.statusBar().showMessage(text)
 		self.MainWindow.statusBar().setStyleSheet(f"color: {color};")
 		self.main_window.statusbar.show() \
-		if config.getboolean("General", "show_status_bar") == True \
-		else self.main_window.statusbar.hide()
+			if config.getboolean("General", "show_status_bar") == True \
+			else self.main_window.statusbar.hide()
 		sleep(time)
 		self.main_window.statusbar.hide() if keep == False else ...
 
@@ -545,7 +552,12 @@ class IMGenAI:
 		config.read("config.ini")
 
 		# Connect buttons
-		self.config_window.pushButton2_1.clicked.connect(lambda: threading.Thread(target=self.setDiffusionModel, args=()).start())
+		self.config_window.pushButton2_1.clicked.connect(
+			lambda: threading.Thread(
+				target=self.setDiffusionModel,
+				args=()
+			).start()
+		)
 		self.config_window.save_button.clicked.connect(self.saveConfig)
 
 		# Set save shortcut
@@ -554,7 +566,7 @@ class IMGenAI:
 		self.config_window.listView1.setMovement(QtWidgets.QListView.Movement.Static)
 		self.config_window.listView1.setModel(QtGui.QStandardItemModel())
 
-		# List of configuration menu items
+		# List of configuration window items
 		self.config_window.listView1.model().appendRow(QtGui.QStandardItem("General"))
 		self.config_window.listView1.model().appendRow(QtGui.QStandardItem("Image generation"))
 		self.config_window.listView1.model().appendRow(QtGui.QStandardItem("Images and prompts"))
@@ -563,7 +575,7 @@ class IMGenAI:
 		self.config_window.listView1.clicked.connect(self.changeConfigTab)
 
 
-	def checkIfConfigFileExist(self):
+	def checkIfConfigFileExist(self) -> None:
 		# Try to open 'config.ini' file
 		try:
 			config = configparser.ConfigParser()
@@ -598,11 +610,15 @@ class IMGenAI:
 
 			# Save config
 			config.write(open("config.ini", "w"))
-			threading.Thread(target=self.setConfigStatusbarText, args=("Config file created!", 2, "#5CB85C")).start()
+			threading.Thread(
+				target=self.setConfigStatusbarText,
+				args=("Config file created!", 2, "#5CB85C")
+			).start()
 
 
 	def changeConfigTab(self) -> None:
-		tab_name = self.config_window.listView1.model().itemData(self.config_window.listView1.selectedIndexes()[0])[0]
+		tab_name = self.config_window.listView1.model() \
+			.itemData(self.config_window.listView1.selectedIndexes()[0])[0]
 		
 		# Hide and disable widgets
 		self.hideAndDisableWidgets()
@@ -691,8 +707,9 @@ class IMGenAI:
 		config.set("Additional", "interrupt_button_shortcut", self.config_window.keySequenceEdit4_2.keySequence().toString())
 		config.set("Additional", "save_config_shortcut", self.config_window.keySequenceEdit4_3.keySequence().toString())
 
-		#  when toggling statusbar
-		self.MainWindow.setFixedHeight(862) if config.getboolean("General", "show_status_bar") \
+		# Change window height when toggling statusbar
+		self.MainWindow.setFixedHeight(862) \
+			if config.getboolean("General", "show_status_bar") \
 			else self.MainWindow.setFixedHeight(842)
 
 		# Set shortcuts and text
@@ -702,7 +719,10 @@ class IMGenAI:
 
 		# Save config
 		config.write(open("config.ini", "w"))
-		threading.Thread(target=self.setConfigStatusbarText, args=("Config file saved!", 2, "#5CB85C")).start()
+		threading.Thread(
+			target=self.setConfigStatusbarText,
+			args=("Config file saved!", 2, "#5CB85C")
+		).start()
 
 
 	def setConfigStatusbarText(self, text: str, time: int = 2, color: str = "#000000", keep: bool = False) -> None:
@@ -713,12 +733,17 @@ class IMGenAI:
 		self.config_window.label_statusbar.hide() if keep == False else ...
 
 
-	def setDiffusionModel(self):
-		threading.Thread(target=self.setConfigStatusbarText, args=("Applying model...", 2, "#5CB85C", True)).start()
+	def setDiffusionModel(self) -> None:
+		threading.Thread(
+			target=self.setConfigStatusbarText,
+			args=("Applying model...", 2, "#5CB85C", True)
+		).start()
 
 		url = self.config_window.lineEdit2_1.text()
-		model_id = self.config_window.lineEdit2_2.text().replace(" ", "").replace("\"", "")
-		
+		model_id = self.config_window.lineEdit2_2 \
+			.text().replace(" ", "") \
+			.replace("\"", "")
+
 		try:
 			response = requests.post(f"{url}/setmodel", {"model_id": model_id}).content
 			if bool(response["same_model"]) == True:

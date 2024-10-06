@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'src/config.ui'
+# Form implementation generated from reading ui file 'IMGenAI\src\config.ui'
 #
 # Created by: PyQt6 UI code generator 6.7.1
 #
@@ -93,11 +93,11 @@ class Ui_Config_Dialog(object):
         self.checkBox1_1.setChecked(True)
         self.checkBox1_1.setObjectName("checkBox1_1")
         self.widget2 = QtWidgets.QWidget(parent=Config_Dialog)
-        self.widget2.setEnabled(False)
+        self.widget2.setEnabled(True)
         self.widget2.setGeometry(QtCore.QRect(200, 0, 400, 384))
         self.widget2.setObjectName("widget2")
         self.label2_1 = QtWidgets.QLabel(parent=self.widget2)
-        self.label2_1.setEnabled(False)
+        self.label2_1.setEnabled(True)
         self.label2_1.setGeometry(QtCore.QRect(10, 10, 380, 22))
         font = QtGui.QFont()
         font.setPointSize(12)
@@ -227,7 +227,7 @@ class Ui_Config_Dialog(object):
 
     def retranslateUi(self, Config_Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Config_Dialog.setWindowTitle(_translate("Config_Dialog", "IMGenAI Configuration Menu"))
+        Config_Dialog.setWindowTitle(_translate("Config_Dialog", "IMGenAI configuration window"))
         self.label1_1.setText(_translate("Config_Dialog", "General"))
         self.label1_2.setText(_translate("Config_Dialog", "Images output foalder path:"))
         self.lineEdit1_1.setPlaceholderText(_translate("Config_Dialog", "output/images/$date"))
