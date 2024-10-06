@@ -4,5 +4,5 @@ output
 prompts
 *.txt
 config.ini
-.venv
+venv
 config.ini

@@ -1,8 +1,28 @@
 """
-This project uses PyQt (version 6.7.1) for its graphical user interface.
-PyQt is licensed under the GNU Lesser General Public License, version 3.0 (LGPLv3).
-You can find more information about the LGPL at https://www.gnu.org/licenses/lgpl.html.
+Copyright (c) 2024, Oderline
+All rights reserved.
+
+This project is based in part on the work of the following projects:
+
+	- PyQt (https://www.riverbankcomputing.com/software/pyqt)
+	- Diffusers (https://huggingface.co/spaces/huggingface/diffusers)
+	- Pillow (fork of PIL) (https://pillow.readthedocs.io/en/stable)
+	- etc.
+
+These projects are licensed under their respective licenses.
+You can find more information about these licenses at:
+
+	- GPLv3: https://www.gnu.org/licenses/gpl-3.0
+	- Apache-2.0: https://www.apache.org/licenses/LICENSE-2.0
+	- PIL License: https://github.com/python-pillow/Pillow/blob/main/LICENSE
+	- MIT License: https://mit-license.org
+
+This project is licensed under MIT License. See the LICENSE file for details.
+
+Permission is granted to use, copy, modify, and distribute this software
+while comply the license agreements of the respective projects.
 """
+
 
 # from PIL import Image, ImageFilter
 
