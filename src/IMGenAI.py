@@ -816,15 +816,12 @@ class IMGenAI:
 
 
 if __name__ == "__main__":
-
 	try:
-
 		os.system("cls") if platform.system() == "Windows" \
 			else os.system("clear") if platform.system() == "Linux" \
 			else ...
 
 		app = IMGenAI()
 		app.run()
-
 	except Exception as e:
 		print("Error while running program:", e)

@@ -1,18 +1,18 @@
 <h1 align="center">IMGenAI by Oderline
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/11qjb5gWBIqp7JOAZRlTBa_Oj-9r9ttFN?usp=sharing)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1NX_ZUrkdSmoxJGIZ_8FN8wylDMvAtbdI?usp=sharing)
 
 ![IMGenAI](demo/IMGenAI.png)
 
-(used model: animagine-xl-3.1 by CagliostroLab)
+(used model: <a href="https://huggingface.co/cagliostrolab/animagine-xl-3.1">animagine-xl-3.1</a> by <a href="https://cagliostrolab.net">CagliostroLab</a>)
 
 </h1>
 
-IMGenAI - an open source client-server application for AI image generation. The server-side based on Diffusers library. UI for desktop app is written using PyQt.
+IMGenAI - an open source client-server application for AI image generation. The server-side based on Diffusers library. Desktop application powered by PyQt toolkit.
 
 # Usage
 
-The server side of the program powered by Google Colab to processes POST requests to generate images based on user-specified parameters and return the result back to the user. The client-side application handles user input, validation, and result presentation.
+The server side of the program powered by [Google Colab](https://colab.google) to processes POST requests to generate images based on user-specified parameters and return the result back to the user. The client-side application handles user input, validation, and result presentation.
 
 IMGenAI provides a simple prompt configurator that allows users to specify parameters such as prompt, negative prompt, seed and other parameters, image viewer to display generated images, image gallery and some other advanced features. All settings can be edited through the configuration window or manually in the config.ini file.
 
@@ -31,13 +31,13 @@ The prompt configurator contains next settings:
 
 # Setting up IMGenAI
 
-- ### Download desktop app:
+- ### Download desktop application:
 
     Download latest [release version](https://github.com/oderline/IMGenAI/releases) of IMGenAI app (or it's source code). You can choose either a single-file executable or an archived folder.
 
 - ### Setup python environment (optional):
 
-    __This step is optional and required only if you want to run IMGenAI app from source code.__
+    __This step is optional and required only if you want to run IMGenAI from source code.__
 
     1. Create new virtual environment:
     ~~~
@@ -56,11 +56,11 @@ The prompt configurator contains next settings:
 
 - ### Server-side configuration:
 
-    1. Save a copy of [this colab notebook](https://colab.research.google.com/drive/1PlTCQoYTQsKt1K7N6QINGfQzf5uz4_vJ?usp=sharing) on your Google Drive.
+    1. Save a copy of [this Colab Notebook](https://colab.research.google.com/drive/1NX_ZUrkdSmoxJGIZ_8FN8wylDMvAtbdI?usp=sharing) on your Google Drive.
 
     2. Create secret key "NGROK_AUTHTOKEN" with your [ngrok authtoken](https://dashboard.ngrok.com/get-started/your-authtoken).
 
-    3. Select Stable Diffusion model in "Setting up Stable Diffusion pipeline" tab or use [custom text-to-image model](https://huggingface.co/models?pipeline_tag=text-to-image&library=diffusers&sort=trending).
+    3. (Optional) Change default Stable Diffusion model (see available txt2img models [here](https://huggingface.co/models?pipeline_tag=text-to-image&library=diffusers&sort=trending)).
 
     4. Run all cells and wait 'till server run.
 
@@ -83,25 +83,23 @@ Contributions to IMGenAI are welcome! If you find a bug or have a feature reques
 
 - ### Server-side:
 
-    TORCH - 1.5.1
-
     | Library | Version (if known) | License | Purpose |
     |---|---|---|---|
-    | transformers | 4.44.2 | Apache License 2.0 | Natural language processing |
-    | diffusers | 0.30.3 | Apache License 2.0 | Text-to-image generation |
     | accelerate | 0.34.2 | Apache License 2.0 | Machine learning acceleration |
-    | torch | ? | MIT License | PyTorch framework |
-    | pyngrok | 7.2.0 | MIT License | Ngrok tunneling |
+    | diffusers | 0.30.3 | Apache License 2.0 | Text-to-image generation |
     | flask | 2.2.5 | MIT License | Web framework |
     | pillow | 10.4.0 | PIL License | Image processing |
+    | pyngrok | 7.2.0 | MIT License | Ngrok tunneling |
+    | torch | 1.5.1 | MIT License | Machine learning library |
+    | transformers | 4.44.2 | Apache License 2.0 | Natural language processing |
     | ujson | 5.10.0 | MIT License | JSON library |
 
 - ### Client-side:
 
     | Library | Version (if known) | License | Purpose |
     |---|---|---|---|
-    | PyQt | 6.7.1 | GPLv3 | GUI toolkit |
-    | pillow | 10.4.0 | PIL License | Image processing |
-    | ujson | 5.10.0 | MIT License | JSON library |
-    | requests | 2.32.3 | Apache License 2.0 | HTTP requests |
     | configparser | 7.1.0 | Python Software Foundation License | Configuration file parsing |
+    | pillow | 10.4.0 | PIL License | Image processing |
+    | pyqt | 6.7.1 | GPLv3 | GUI toolkit |
+    | requests | 2.32.3 | Apache License 2.0 | HTTP requests |
+    | ujson | 5.10.0 | MIT License | JSON library |
