@@ -4,6 +4,8 @@
 
 ![IMGenAI](demo/IMGenAI.png)
 
+(used model: animagine-xl-3.1 by CagliostroLab)
+
 </h1>
 
 IMGenAI - an open source client-server application for AI image generation. The server-side based on Diffusers library. UI for desktop app is written using PyQt.
@@ -67,7 +69,7 @@ The prompt configurator contains next settings:
 # Future plans
 
 - [x] Add support for multiple models.
-- [ ] Improve dynamic model switching.
+- [x] Fix dynamic model switching.
 - [ ] Improve prompt configurator.
 - [ ] Implement server-side application for any Python-compatible device.
 - [ ] Mobile devices support.
@@ -91,8 +93,6 @@ Contributions to IMGenAI are welcome! If you find a bug or have a feature reques
     | flask | | MIT License | Web framework |
     | pillow | | PIL License | Image processing |
     | ujson | | MIT License | JSON library |
-    | random | Built-in | Python Software Foundation License | Random number generation |
-    | base64 | Built-in | Python Software Foundation License | Base64 encoding/decoding |
 
 - ## Client-side:
 
@@ -103,9 +103,3 @@ Contributions to IMGenAI are welcome! If you find a bug or have a feature reques
     | ujson | 5.10.0 | MIT License | JSON library |
     | requests | 2.32.3 | Apache License 2.0 | HTTP requests |
     | configparser | 7.1.0 | Python Software Foundation License | Configuration file parsing |
-    | os | Built-in | Python Software Foundation License | Operating system-related functions |
-    | system | Built-in | Python Software Foundation License | System-related functions |
-    | threading | Built-in | Python Software Foundation License | Threading |
-    | base64 | Built-in | Python Software Foundation License | Base64 encoding/decoding |
-    | random | Built-in | Python Software Foundation License | Random number generation |
-    | time | Built-in | Python Software Foundation License | Time-related functions |

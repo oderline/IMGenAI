@@ -32,6 +32,7 @@ from time import sleep
 from PIL import Image
 import ujson as json
 import configparser
+import platform
 
 from window import Ui_MainWindow
 from config import Ui_Config_Dialog
@@ -57,6 +58,16 @@ class IMGenAI:
 
 	def setupMainWindowUI(self) -> None:
 		self.checkIfConfigFileExist()
+		config = configparser.ConfigParser()
+		config.read("config.ini")
+
+		# Change window height when statusbar is shown
+		if config.getboolean("General", "show_status_bar"):
+			self.MainWindow.setFixedHeight(862)
+			self.main_window.statusbar.show()
+		else:
+			self.MainWindow.setFixedHeight(841)
+			self.main_window.statusbar.hide()
 
 		# Set icons
 		self.main_window.open_file.setIcon(QtGui.QIcon().fromTheme("document-open"))
@@ -114,7 +125,14 @@ class IMGenAI:
 		# Connect buttons/actions
 		self.main_window.pushButton1.clicked.connect(lambda: self.main_window.lineEdit1.setText(str(random.randint(0, 9999_9999_9999_9999))))
 		self.main_window.pushButton2.clicked.connect(lambda: self.main_window.lineEdit1.setText("-1"))
-		self.main_window.pushButton3.clicked.connect(lambda: threading.Thread(target=self.generateImage, args=(self.main_window.spinBox6.value(),)).start())
+		self.main_window.pushButton3.clicked.connect(
+			lambda: threading.Thread(
+				target=self.generateImage,
+				args=(
+					self.main_window.spinBox6.value(),
+				)
+			).start()
+		)
 		self.main_window.listWidget1.clicked.connect(lambda: self.imageSelected())
 
 
@@ -319,7 +337,9 @@ class IMGenAI:
 		self.openImage(image_path)
 
 		try:
-			self.setPromptData(self.getMetadataFromImage(image_path))
+			data = self.getMetadataFromImage(image_path)
+			self.setPromptData(data)
+			self.last_used_seed = data["seed"]
 		except:
 			threading.Thread(
 				target=self.setMainWindowStatusBarText,
@@ -382,6 +402,7 @@ class IMGenAI:
 			)
 
 		self.main_window.image.setPixmap(pixmap)
+		data = self.getPromptData()
 
 
 	def saveImagesAndPrompts(self, data, final, all) -> None:
@@ -726,10 +747,13 @@ class IMGenAI:
 		config.set("Additional", "interrupt_button_shortcut", self.config_window.keySequenceEdit4_2.keySequence().toString())
 		config.set("Additional", "save_config_shortcut", self.config_window.keySequenceEdit4_3.keySequence().toString())
 
-		# Change window height when toggling statusbar
-		self.MainWindow.setFixedHeight(862) \
-			if config.getboolean("General", "show_status_bar") \
-			else self.MainWindow.setFixedHeight(842)
+		# Change window height when statusbar is shown
+		if config.getboolean("General", "show_status_bar"):
+			self.MainWindow.setFixedHeight(862)
+			self.main_window.statusbar.show()
+		else:
+			self.MainWindow.setFixedHeight(841)
+			self.main_window.statusbar.hide()
 
 		# Set shortcuts and text
 		self.main_window.pushButton3.setText(f"Generate ({config.get("Additional", "generate_button_shortcut")})")
@@ -792,6 +816,9 @@ class IMGenAI:
 
 
 if __name__ == "__main__":
-	os.system("cls")
+	os.system("cls") if platform.system() == "Windows" \
+		else os.system("clear") if platform.system() == "Linux" \
+		else ...
+
 	app = IMGenAI()
 	app.run()
