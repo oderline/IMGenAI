@@ -284,7 +284,7 @@ class IMGenAI:
 		# get response from server
 		if self.in_generation_process == True:
 			try:
-				response: requests.Response = requests.post(url, data)
+				response: requests.Response = requests.post(url=url, data=data, timeout=None)
 				response_data: dict = json.loads(response.content)
 			except Exception as e:
 				threading.Thread(
@@ -816,9 +816,15 @@ class IMGenAI:
 
 
 if __name__ == "__main__":
-	os.system("cls") if platform.system() == "Windows" \
-		else os.system("clear") if platform.system() == "Linux" \
-		else ...
 
-	app = IMGenAI()
-	app.run()
+	try:
+
+		os.system("cls") if platform.system() == "Windows" \
+			else os.system("clear") if platform.system() == "Linux" \
+			else ...
+
+		app = IMGenAI()
+		app.run()
+
+	except Exception as e:
+		print("Error while running program:", e)

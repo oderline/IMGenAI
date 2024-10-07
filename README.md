@@ -79,22 +79,24 @@ The prompt configurator contains next settings:
 
 Contributions to IMGenAI are welcome! If you find a bug or have a feature request, please open an issue on the [GitHub repository](https://github.com/oderline/IMGenAI). If you would like to contribute code, please fork the repository and submit a pull request.
 
-# Project dependencies:
+# Project dependencies
 
-- ## Server-side:
+- ### Server-side:
+
+    TORCH - 1.5.1
 
     | Library | Version (if known) | License | Purpose |
     |---|---|---|---|
-    | transformers | | Apache License 2.0 | Natural language processing |
-    | diffusers | | Apache License 2.0 | Text-to-image generation |
-    | accelerate | | Apache License 2.0 | Machine learning acceleration |
-    | torch | | MIT License | PyTorch framework |
-    | pyngrok | | MIT License | Ngrok tunneling |
-    | flask | | MIT License | Web framework |
-    | pillow | | PIL License | Image processing |
-    | ujson | | MIT License | JSON library |
+    | transformers | 4.44.2 | Apache License 2.0 | Natural language processing |
+    | diffusers | 0.30.3 | Apache License 2.0 | Text-to-image generation |
+    | accelerate | 0.34.2 | Apache License 2.0 | Machine learning acceleration |
+    | torch | ? | MIT License | PyTorch framework |
+    | pyngrok | 7.2.0 | MIT License | Ngrok tunneling |
+    | flask | 2.2.5 | MIT License | Web framework |
+    | pillow | 10.4.0 | PIL License | Image processing |
+    | ujson | 5.10.0 | MIT License | JSON library |
 
-- ## Client-side:
+- ### Client-side:
 
     | Library | Version (if known) | License | Purpose |
     |---|---|---|---|
