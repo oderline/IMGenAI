@@ -100,6 +100,7 @@ Contributions to IMGenAI are welcome! If you find a bug or have a feature reques
     |---|---|---|---|
     | configparser | 7.1.0 | Python Software Foundation License | Configuration file parsing |
     | pillow | 10.4.0 | PIL License | Image processing |
+    | ujson | 5.10.0 | MIT License | JSON library |
+    | pyinstaller | 6.10.0 | GPLv2 | Python to executable converter |
     | pyqt | 6.7.1 | GPLv3 | GUI toolkit |
     | requests | 2.32.3 | Apache License 2.0 | HTTP requests |
-    | ujson | 5.10.0 | MIT License | JSON library |

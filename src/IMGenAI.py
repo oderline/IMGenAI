@@ -414,15 +414,10 @@ class IMGenAI:
 		date: str = QtCore.QDate.currentDate().toString(config.get("General", "date_format"))
 		time: str = QtCore.QTime.currentTime().toString(config.get("General", "time_format"))
 
-		print("Date:", date)
-		print("Time:", time)
-
 		# Save images
 		if config.getboolean("Images and prompts", "save_images") == True:
 			# Final image
 			if final != None:
-
-				# image_file: str = config.get('General', 'image_output_dir') + "/" + config.get('General', 'image_prompt_filename') + ".png"
 				image_file: str = f"{config.get('General', 'image_output_dir')}/{config.get('General', 'image_prompt_filename')}.png"
 				image_file = image_file \
 					.replace("$date", date) \
@@ -436,10 +431,6 @@ class IMGenAI:
 			# All images
 			if all != None:
 				for i, image in enumerate(all):
-
-					# image_file: str = config.get('General', 'image_output_dir') + "/" + config.get('General', 'image_prompt_filename') + ".png"
-					# image_file.replace("$date", date).replace("$time", time).replace("$index", str(i+1))
-
 					image_file: str = f"{config.get('General', 'image_output_dir')}/{config.get('General', 'image_prompt_filename')}.png"
 					image_file = image_file \
 						.replace("$date", date) \
@@ -454,9 +445,6 @@ class IMGenAI:
 		if config.getboolean("Images and prompts", "save_prompts") == True:
 			# Final image
 			if final != None:
-				# prompt_file: str = config.get('General', 'prompt_output_dir') + "/" + config.get('General', 'image_prompt_filename') + ".txt"
-				# prompt_file.replace("$date", date).replace("$time", time).replace("$index", "0")
-
 				prompt_file: str = f"{config.get('General', 'prompt_output_dir')}/{config.get('General', 'image_prompt_filename')}.txt"
 				prompt_file = prompt_file \
 					.replace("$date", date) \
@@ -469,10 +457,6 @@ class IMGenAI:
 			# All images
 			if all != None:
 				for i, image in enumerate(all):
-
-					# prompt_file: str = config.get('General', 'prompt_output_dir') + "/" + config.get('General', 'image_prompt_filename') + ".txt"
-					# prompt_file.replace("$date", date).replace("$time", time).replace("$index", "0")
-
 					prompt_file: str = f"{config.get('General', 'prompt_output_dir')}/{config.get('General', 'image_prompt_filename')}.txt"
 					prompt_file = prompt_file \
 						.replace("$date", date) \
@@ -818,4 +802,4 @@ if __name__ == "__main__":
 		app = IMGenAI()
 		app.run()
 	except Exception as e:
-		print("Error while running program:", e)
+		print("Error:", e)

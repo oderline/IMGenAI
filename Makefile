@@ -8,7 +8,8 @@ endif
 
 setup:
 ifeq ($(OS), Windows_NT)
-	echo W
+	python -m venv venv
+	venv\Scripts\pip install -r requirements.txt
 else
 	python3 -m venv venv
 	venv/bin/pip install -r requirements.txt
@@ -17,7 +18,9 @@ endif
 
 ui:
 ifeq ($(OS), Windows_NT)
-	echo W
+	venv\Scripts\pyuic6 -x -o src/window.py src/ui/window.ui
+	venv\Scripts\pyuic6 -x -o src/ui/config.py src/ui/config.ui
+	venv\Scripts\pyuic6 -x -o src/ui/about.py src/ui/about.ui
 else
 	venv/bin/pyuic6 -x -o src/window.py src/ui/window.ui
 	venv/bin/pyuic6 -x -o src/ui/config.py src/ui/config.ui
@@ -27,7 +30,9 @@ endif
 
 onefile:
 ifeq ($(OS), Windows_NT)
-	echo W
+	venv\Scripts\pyinstaller --clean --optimize 2 --noconfirm --onefile -w src/IMGenAI.py
+	rmdir /q /s build
+	del *.spec
 else
 	venv/bin/pyinstaller --clean --optimize 2 --noconfirm --onefile -w src/IMGenAI.py
 	rm -rf build
@@ -37,7 +42,9 @@ endif
 
 onedir:
 ifeq ($(OS), Windows_NT)
-	echo W
+	venv\Scripts\pyinstaller --clean --optimize 2 --noconfirm --onedir -w src/IMGenAI.py
+	rmdir /q /s build
+	del *.spec
 else
 	venv/bin/pyinstaller --clean --optimize 2 --noconfirm --onedir -w src/IMGenAI.py
 	rm -rf build
