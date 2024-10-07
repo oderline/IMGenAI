@@ -414,20 +414,21 @@ class IMGenAI:
 		date: str = QtCore.QDate.currentDate().toString(config.get("General", "date_format"))
 		time: str = QtCore.QTime.currentTime().toString(config.get("General", "time_format"))
 
+		print("Date:", date)
+		print("Time:", time)
+
 		# Save images
 		if config.getboolean("Images and prompts", "save_images") == True:
 			# Final image
 			if final != None:
-				image_file: str = f"{
-					config.get('General', 'image_output_dir')
-						.replace("$date", date)
-						.replace("$time", time)
-					}/{
-						config.get('General', 'image_prompt_filename')
-							.replace("$date", date)
-							.replace("$time", time)
-							.replace("$index", "0")
-					}.png"
+
+				# image_file: str = config.get('General', 'image_output_dir') + "/" + config.get('General', 'image_prompt_filename') + ".png"
+				image_file: str = f"{config.get('General', 'image_output_dir')}/{config.get('General', 'image_prompt_filename')}.png"
+				image_file = image_file \
+					.replace("$date", date) \
+					.replace("$time", time) \
+					.replace("$index", "0")
+
 				os.makedirs(os.path.dirname(image_file), exist_ok=True)
 				open(image_file, "wb").write(final)
 				self.addImageToList(image_file)
@@ -435,16 +436,16 @@ class IMGenAI:
 			# All images
 			if all != None:
 				for i, image in enumerate(all):
-					image_file: str = f"{
-						config.get('General', 'image_output_dir')
-							.replace("$date", date)
-							.replace("$time", time)
-						}/{
-							config.get('General', 'image_prompt_filename')
-								.replace("$date", date)
-								.replace("$time", time)
-								.replace("$index", str(i+1))
-						}.png"
+
+					# image_file: str = config.get('General', 'image_output_dir') + "/" + config.get('General', 'image_prompt_filename') + ".png"
+					# image_file.replace("$date", date).replace("$time", time).replace("$index", str(i+1))
+
+					image_file: str = f"{config.get('General', 'image_output_dir')}/{config.get('General', 'image_prompt_filename')}.png"
+					image_file = image_file \
+						.replace("$date", date) \
+						.replace("$time", time) \
+						.replace("$index", str(i+1))
+
 					os.makedirs(os.path.dirname(image_file), exist_ok=True)
 					open(image_file, "wb").write(image)
 					self.addImageToList(image_file)
@@ -453,32 +454,31 @@ class IMGenAI:
 		if config.getboolean("Images and prompts", "save_prompts") == True:
 			# Final image
 			if final != None:
-				prompt_file: str = f"{
-					config.get('General', 'prompt_output_dir')
-						.replace("$date", date)
-						.replace("$time", time)
-					}/{
-						config.get('General', 'image_prompt_filename')
-							.replace("$date", date)
-							.replace("$time", time)
-							.replace("$index", "0")
-					}.txt"
+				# prompt_file: str = config.get('General', 'prompt_output_dir') + "/" + config.get('General', 'image_prompt_filename') + ".txt"
+				# prompt_file.replace("$date", date).replace("$time", time).replace("$index", "0")
+
+				prompt_file: str = f"{config.get('General', 'prompt_output_dir')}/{config.get('General', 'image_prompt_filename')}.txt"
+				prompt_file = prompt_file \
+					.replace("$date", date) \
+					.replace("$time", time) \
+					.replace("$index", "0")
+
 				os.makedirs(os.path.dirname(prompt_file), exist_ok=True)
 				open(prompt_file, "w").write(json.dumps(data, indent=4))
 
 			# All images
 			if all != None:
 				for i, image in enumerate(all):
-					prompt_file: str = f"{
-						config.get('General', 'prompt_output_dir')
-							.replace("$date", date)
-							.replace("$time", time)
-						}/{
-							config.get('General', 'image_prompt_filename')
-								.replace("$date", date)
-								.replace("$time", time)
-								.replace("$index", str(i+1))
-						}.txt"
+
+					# prompt_file: str = config.get('General', 'prompt_output_dir') + "/" + config.get('General', 'image_prompt_filename') + ".txt"
+					# prompt_file.replace("$date", date).replace("$time", time).replace("$index", "0")
+
+					prompt_file: str = f"{config.get('General', 'prompt_output_dir')}/{config.get('General', 'image_prompt_filename')}.txt"
+					prompt_file = prompt_file \
+						.replace("$date", date) \
+						.replace("$time", time) \
+						.replace("$index", str(i+1))
+
 					os.makedirs(os.path.dirname(prompt_file), exist_ok=True)
 					open(prompt_file, "w").write(json.dumps(data, indent=4))
 
@@ -535,13 +535,7 @@ class IMGenAI:
 		self.main_window.spinBox2.setValue(int(data["width"]))
 		self.main_window.spinBox3.setValue(int(data["height"]))
 		self.main_window.spinBox4.setValue(int(data["guidance_scale"]))
-
-		# For compatibility with old prompt files
-		try:
-			self.main_window.spinBox5.setValue(int(data["num_images"]))
-		except:
-			self.main_window.spinBox5.setValue(1)
-
+		self.main_window.spinBox5.setValue(int(data["num_images"]))
 		self.main_window.spinBox6.setValue(batch_count)
 
 
@@ -756,7 +750,7 @@ class IMGenAI:
 			self.main_window.statusbar.hide()
 
 		# Set shortcuts and text
-		self.main_window.pushButton3.setText(f"Generate ({config.get("Additional", "generate_button_shortcut")})")
+		self.main_window.pushButton3.setText(f"Generate ({config.get('Additional', 'generate_button_shortcut')})")
 		self.main_window.pushButton3.setShortcut(QtGui.QKeySequence(config.get("Additional", "generate_button_shortcut")))
 		self.config_window.save_button.setShortcut(QtGui.QKeySequence(config.get("Additional", "save_config_shortcut")))
 
@@ -798,7 +792,7 @@ class IMGenAI:
 			else:
 				threading.Thread(
 					target=self.setConfigStatusbarText,
-					args=(f"Model {response["model_id"]} applied successfully!", 2, "#5CB85C")
+					args=(f"Model {response['model_id']} applied successfully!", 2, "#5CB85C")
 				).start()
 		except Exception as e:
 			threading.Thread(
