@@ -635,7 +635,7 @@ class IMGenAI:
 				"time_format": "hh-mm-ss",
 				"show_status_bar": True,
 			}
-			config["Image generation"] = {"model_id": "runwayml/stable-diffusion-v1-5"}
+			config["Image generation"] = {"model_id": ""}
 			config["Images and prompts"] = {
 				"save_images": True,
 				"save_prompts": True,
